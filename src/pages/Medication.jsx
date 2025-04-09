@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 function Medication() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Animation variants for smooth transitions
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 1 } },
@@ -18,7 +18,7 @@ function Medication() {
         variants={containerVariants}
         className="container mx-auto p-4"
       >
-        {/* Supportive Introduction */}
+
         <motion.h1
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -36,7 +36,6 @@ function Medication() {
           If you're experiencing panic attacks, know that you're not alone. Medications can play a crucial role in reducing the frequency and intensity of your symptoms, helping you regain control and improve your quality of life. Always work with a healthcare professional to find the treatment plan that’s right for you.
         </motion.p>
 
-        {/* Medication Overview Table */}
         <div className="mt-8">
           <h2 className="text-2xl font-semibold text-blue-800 mb-4">Types of Medications</h2>
           <table className="w-full text-left border-collapse">
@@ -77,7 +76,7 @@ function Medication() {
           </table>
         </div>
 
-        {/* How Medications Work */}
+
         <div className="mt-8">
           <h2 className="text-2xl font-semibold text-blue-800 mb-4">How Medications Help</h2>
           <p className="text-gray-700">
@@ -85,7 +84,7 @@ function Medication() {
           </p>
         </div>
 
-        {/* Important Considerations */}
+
         <div className="mt-8">
           <h2 className="text-2xl font-semibold text-blue-800 mb-4">Important Considerations</h2>
           <ul className="list-disc list-inside text-gray-700">
@@ -96,7 +95,7 @@ function Medication() {
           </ul>
         </div>
 
-        {/* Emergency Support */}
+
         <div className="mt-8 bg-red-100 p-4 rounded-lg">
           <h2 className="text-2xl font-semibold text-red-800 mb-2">Emergency Support</h2>
           <p className="text-red-700">
@@ -120,7 +119,7 @@ function Medication() {
               >
                 nimh.gov.bd
               </a>{' '}
-              {/* :contentReference[oaicite:1]{index=1} */}
+    
             </li>
             <li>
               <strong>Psychological Health & Wellness Clinic (PHWC)</strong> – 1st Fl., House 4D, Road 73, Gulshan 2, Dhaka;{' '}
@@ -133,7 +132,7 @@ function Medication() {
               >
                 phwcbd.org
               </a>{' '}
-              {/* :contentReference[oaicite:2]{index=2} */}
+ 
             </li>
             <li>
               <strong>Moner Bondhu</strong> (24/7 counselling & crisis helpline):{' '}
@@ -146,12 +145,11 @@ function Medication() {
               >
                 monerbondhu.org
               </a>{' '}
-              {/* :contentReference[oaicite:3]{index=3} */}
+    
             </li>
           </ul>
         </div>
 
-        {/* Learn More Button */}
         <button
           onClick={() => setIsModalOpen(true)}
           className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
@@ -159,7 +157,7 @@ function Medication() {
           Learn More About Medication
         </button>
 
-        {/* Additional Resources */}
+      
         <div className="mt-8">
           <h2 className="text-2xl font-semibold text-blue-800 mb-4">Additional Resources</h2>
           <div className="flex flex-wrap gap-4">
@@ -198,7 +196,7 @@ function Medication() {
           </div>
         </div>
 
-        {/* Expert Testimonial */}
+     
         <motion.div
           initial={{ scale: 0.9 }}
           animate={{ scale: 1 }}
@@ -212,7 +210,7 @@ function Medication() {
         </motion.div>
       </motion.div>
 
-      {/* Modal for Detailed Information */}
+
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg max-h-[80vh] overflow-y-auto">

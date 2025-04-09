@@ -112,9 +112,9 @@ function Home() {
         </motion.div>
         <motion.div ref={ref} className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full mb-20">
           {[
-            { to: '/about', title: 'Explore Awareness', desc: 'Deep dive into the roots of tranquility and mindfulness.' },
-            { to: '/coping', title: 'Soothing Methods', desc: 'Discover gentle ways to ease anxiety and embrace calm.' },
-            { to: '/medication', title: 'Healing Insights', desc: 'Clear and compassionate guidance on medication and wellness.' }
+            { to: '/relevia/about', title: 'Explore Awareness', desc: 'Deep dive into the roots of tranquility and mindfulness.' },
+            { to: '/relevia/coping', title: 'Soothing Methods', desc: 'Discover gentle ways to ease anxiety and embrace calm.' },
+            { to: '/relevia/medication', title: 'Healing Insights', desc: 'Clear and compassionate guidance on medication and wellness.' }
           ].map((item, i) => (
             <motion.div
               key={i}
@@ -243,8 +243,8 @@ function Home() {
           </motion.h2>
           <div className="flex flex-col sm:flex-row justify-center gap-6">
             {[
-              { to: '/about', text: 'Discover Resources', bg: 'primary' },
-              { to: '/contact', text: 'Connect With Us', bg: 'secondary' }
+              { to: '/relevia/about', text: 'Discover Resources', bg: 'primary' },
+              { to: '/relevia/contact', text: 'Connect With Us', bg: 'secondary' }
             ].map((btn, i) => (
               <motion.div key={i} whileHover={{ scale: 1.08, rotate: 1 }} whileTap={{ scale: 0.95 }}>
                 <Link to={btn.to} className={`bg-${btn.bg}-600 text-primary px-8 py-4 rounded-full font-body text-lg shadow-soft hover:bg-${btn.bg}-700 transition-all duration-300`}>

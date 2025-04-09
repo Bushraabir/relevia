@@ -202,7 +202,7 @@ function About() {
           <p className="text-neutral-600 font-body mb-8 text-lg">Deepen your understanding and find support with these tools and communities.</p>
           <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link to="/resources" className="bg-primary-500 text-white px-6 py-3 rounded-lg shadow-soft hover:bg-primary-600 transition duration-300 font-body">
+              <Link to="/relevia/resources" className="bg-primary-500 text-white px-6 py-3 rounded-lg shadow-soft hover:bg-primary-600 transition duration-300 font-body">
                 Our Resources
               </Link>
             </motion.div>
@@ -212,7 +212,7 @@ function About() {
               </a>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link to="/contact" className="bg-accent-500 text-white px-6 py-3 rounded-lg shadow-soft hover:bg-accent-600 transition duration-300 font-body">
+              <Link to="/relevia/contact" className="bg-accent-500 text-white px-6 py-3 rounded-lg shadow-soft hover:bg-accent-600 transition duration-300 font-body">
                 Contact Support
               </Link>
             </motion.div>

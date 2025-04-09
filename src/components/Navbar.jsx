@@ -8,10 +8,10 @@ function Navbar() {
   const controls = useAnimation();
 
   const navLinks = [
-    { to: '/about', label: 'What is it actually?' },
-    { to: '/coping', label: 'Coping Techniques' },
-    { to: '/medication', label: 'Medication' },
-    { to: '/contact', label: 'Contact' },
+    { to: '/relevia/about', label: 'What is it actually?' },
+    { to: '/relevia/coping', label: 'Coping Techniques' },
+    { to: '/relevia/medication', label: 'Medication' },
+    { to: '/relevia/contact', label: 'Contact' },
   ];
 
   const menuVariants = {
@@ -60,7 +60,7 @@ function Navbar() {
     >
       <div className="container mx-auto flex justify-between items-center">
         <Link
-          to="/"
+          to="/relevia/"
           className="text-neutral-50 text-2xl font-heading font-bold tracking-wide"
         >
           Relevia

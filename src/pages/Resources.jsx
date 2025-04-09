@@ -254,7 +254,7 @@ function Resources() {
               transition={{ duration: 0.3 }}
             >
               <Link
-                to="/resources"
+                to="/relevia/resources"
                 className="bg-primary-500 text-white px-6 py-3 rounded-lg shadow-soft hover:bg-primary-600 transition duration-300 text-sm sm:text-base"
               >
                 More Resources
@@ -266,7 +266,7 @@ function Resources() {
               transition={{ duration: 0.3 }}
             >
               <Link
-                to="/contact"
+                to="/relevia/contact"
                 className="bg-secondary-500 text-white px-6 py-3 rounded-lg shadow-soft hover:bg-secondary-600 transition duration-300 text-sm sm:text-base"
               >
                 Contact Us
