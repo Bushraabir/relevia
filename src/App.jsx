@@ -20,22 +20,22 @@ function App() {
     <Router>
       <Navbar />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/coping" element={<Coping />} />
-        <Route path="/medication" element={<Medication />} />
-        <Route path="/contact" element={<Contact />} />
+        <Route path="/relevia/" element={<Home />} />
+        <Route path="/relevia/about" element={<About />} />
+        <Route path="/relevia/coping" element={<Coping />} />
+        <Route path="/relevia/medication" element={<Medication />} />
+        <Route path="/relevia/contact" element={<Contact />} />
 
 
 
-        <Route path="/coping/breathing" element={<Breathing />} />
-        <Route path="/coping/mindfulness" element={<Mindfulness />} />
-        <Route path="/coping/breathing" element={<Breathing />} />
-        <Route path="/coping/relaxation" element={<Relaxation />} />
-        <Route path="/coping/visualization" element={<Visualisation />} />
-        <Route path="/coping/affirmations" element={<Affirmations />} />
-        <Route path="/coping/activity" element={<Activity />} />
-        <Route path="/coping/journaling" element={<Journaling />} />
+        <Route path="/relevia/coping/breathing" element={<Breathing />} />
+        <Route path="/relevia/coping/mindfulness" element={<Mindfulness />} />
+        <Route path="/relevia/coping/breathing" element={<Breathing />} />
+        <Route path="/relevia/coping/relaxation" element={<Relaxation />} />
+        <Route path="/relevia/coping/visualization" element={<Visualisation />} />
+        <Route path="/relevia/coping/affirmations" element={<Affirmations />} />
+        <Route path="/relevia/coping/activity" element={<Activity />} />
+        <Route path="/relevia/coping/journaling" element={<Journaling />} />
 
 
 

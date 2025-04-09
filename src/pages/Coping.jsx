@@ -50,49 +50,49 @@ const techniques = [
     title: 'Deep Breathing',
     description: 'Regulate your breath with the 4-4-4 technique to calm your nervous system.',
     icon: <FaLungs className="text-5xl text-teal-600" />,
-    path: '/coping/breathing',
+    path: '/relevia/coping/breathing',
   },
   {
     id: 'mindfulness',
     title: 'Mindfulness',
     description: 'Ground yourself using the 5-4-3-2-1 sensory technique.',
     icon: <FaEye className="text-5xl text-teal-600" />,
-    path: '/coping/mindfulness',
+    path: '/relevia/coping/mindfulness',
   },
   {
     id: 'relaxation',
     title: 'Progressive Relaxation',
     description: 'Release tension by tensing and relaxing muscle groups.',
     icon: <FaHandSparkles className="text-5xl text-teal-600" />,
-    path: '/coping/relaxation',
+    path: '/relevia/coping/relaxation',
   },
   {
     id: 'visualization',
     title: 'Visualization',
     description: 'Imagine a peaceful scene to soothe your mind.',
     icon: <FaImages className="text-5xl text-teal-600" />,
-    path: '/coping/visualization',
+    path: '/relevia/coping/visualization',
   },
   {
     id: 'affirmations',
     title: 'Positive Affirmations',
     description: 'Repeat calming phrases to shift your mindset.',
     icon: <FaSmile className="text-5xl text-teal-600" />,
-    path: '/coping/affirmations',
+    path: '/relevia/coping/affirmations',
   },
   {
     id: 'activity',
     title: 'Physical Activity',
     description: 'Engage in light movement to release stress.',
     icon: <FaRunning className="text-5xl text-teal-600" />,
-    path: '/coping/activity',
+    path: '/relevia/coping/activity',
   },
   {
     id: 'journaling',
     title: 'Journaling',
     description: 'Write your thoughts to process emotions.',
     icon: <FaPen className="text-5xl text-teal-600" />,
-    path: '/coping/journaling',
+    path: '/relevia/coping/journaling',
   },
 ];
 
@@ -142,7 +142,7 @@ function Coping() {
             Seeking Instant Relief?
           </motion.h2>
           <p className="text-gray-700 text-lg mb-8">Start with guided breathing to find peace in seconds.</p>
-          <Link to="/coping/breathing">
+          <Link to="/relevia/coping/breathing">
           <motion.button
           
             initial={{ scale: 1 }}
@@ -219,7 +219,7 @@ function Coping() {
               whileHover={{ scale: 1.15, rotate: 3 }}
               whileTap={{ scale: 0.9 }}
             >
-              <Link to="/resources" className="bg-teal-600 text-white px-10 py-4 rounded-full shadow-lg hover:bg-teal-700 transition-all duration-300 text-lg font-semibold">
+              <Link to="/relevia/resources" className="bg-teal-600 text-white px-10 py-4 rounded-full shadow-lg hover:bg-teal-700 transition-all duration-300 text-lg font-semibold">
                 Resources
               </Link>
             </motion.div>
@@ -227,7 +227,7 @@ function Coping() {
               whileHover={{ scale: 1.15, rotate: -3 }}
               whileTap={{ scale: 0.9 }}
             >
-              <Link to="/contact" className="bg-purple-600 text-white px-10 py-4 rounded-full shadow-lg hover:bg-purple-700 transition-all duration-300 text-lg font-semibold">
+              <Link to="/relevia/contact" className="bg-purple-600 text-white px-10 py-4 rounded-full shadow-lg hover:bg-purple-700 transition-all duration-300 text-lg font-semibold">
                 Contact Us
               </Link>
             </motion.div>

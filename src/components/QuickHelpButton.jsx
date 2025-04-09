@@ -47,7 +47,7 @@ function QuickHelpButton() {
   };
 
   return (
-    <Link to="/coping" className="fixed bottom-6 right-6 z-50">
+    <Link to="/relevia/coping" className="fixed bottom-6 right-6 z-50">
       <motion.div
         className="relative flex items-center justify-center bg-gradient-to-br from-accent-500 to-accent-600 shadow-lg overflow-hidden"
         variants={buttonVariants}
