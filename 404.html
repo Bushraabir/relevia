@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      const segment = 1;
+      const redirect = location.pathname.split('/').slice(0, 1 + segment).join('/');
+      location.replace(redirect || '/');
+    </script>
+  </head>
+</html>
