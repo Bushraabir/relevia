@@ -1,12 +1,12 @@
-import { Link } from 'react-router-dom'
-import Particles from 'react-particles'
-import { loadFull } from 'tsparticles'
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { useRef } from 'react'
-import { animated, useSpring } from '@react-spring/web'
-import Cursor from '../components/cursor'
-import Lottie from 'lottie-react'
-import heartAnimation from '../assets/animation/heart.json'
+import { Link } from 'react-router-dom';
+import Particles from 'react-particles';
+import { loadFull } from 'tsparticles';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef } from 'react';
+import { animated, useSpring } from '@react-spring/web';
+import Cursor from '../components/cursor';
+import Lottie from 'lottie-react';
+import heartAnimation from '../assets/animation/heart.json';
 
 const particleOptions = {
   background: { color: { value: 'transparent' } },
@@ -24,54 +24,58 @@ const particleOptions = {
     move: { enable: true, speed: 0.1, direction: 'none', random: true, straight: false, outModes: 'bounce' }
   },
   detectRetina: true
-}
+};
 
-const particlesInit = async main => {
-  await loadFull(main)
-}
+const particlesInit = async (main) => {
+  await loadFull(main);
+};
 
 const FloatingOrbs = () => {
   const orbs = [
     { id: 1, x: '10%', y: '80%', size: 30, color: 'bg-primary-400', delay: 0 },
     { id: 2, x: '80%', y: '70%', size: 40, color: 'bg-secondary-400', delay: 0.5 },
     { id: 3, x: '50%', y: '90%', size: 25, color: 'bg-accent-400', delay: 1 }
-  ]
+  ];
   return (
     <>
-      {orbs.map(orb => (
+      {orbs.map((orb) => (
         <motion.div
           key={orb.id}
           className={`absolute rounded-full ${orb.color}`}
           style={{ width: orb.size, height: orb.size, left: orb.x, top: orb.y }}
-          animate={{ y: [0, -10, 0], opacity: [0.8, 1, 0.8] }}
+          animate={{ y: [0, -15, 0], x: [0, 10, 0], opacity: [0.8, 1, 0.8] }}
           transition={{ duration: 8, repeat: Infinity, delay: orb.delay, ease: 'easeInOut' }}
         />
       ))}
     </>
-  )
-}
+  );
+};
 
 function Home() {
-  const { scrollY } = useScroll()
-  const yOffset = useTransform(scrollY, [0, 600], [0, 100])
-  const scaleHeader = useTransform(scrollY, [0, 600], [1, 0.9])
-  const opacityHeader = useTransform(scrollY, [0, 600], [1, 0.7])
-  const ref = useRef(null)
+  const { scrollY } = useScroll();
+  const yOffset = useTransform(scrollY, [0, 600], [0, 100]);
+  const scaleHeader = useTransform(scrollY, [0, 600], [1, 0.9]);
+  const opacityHeader = useTransform(scrollY, [0, 600], [1, 0.7]);
+  const ref = useRef(null);
+  
   const cardVariants = {
-    initial: { opacity: 0, y: 50 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
-    hover: { y: -5, scale: 1.02, transition: { duration: 0.3 } }
-  }
+    initial: { opacity: 0, y: 50, scale: 0.95 },
+    animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: 'easeOut' } },
+    hover: { y: -10, scale: 1.05, rotate: 1, transition: { type: 'spring', stiffness: 200, damping: 15 } }
+  };
+
   const headerTextVariants = {
-    initial: { opacity: 0, y: -20 },
-    animate: { opacity: 1, y: 0, transition: { delay: 0.3, duration: 1, ease: 'easeOut' } }
-  }
+    initial: { opacity: 0, y: -30, scale: 0.9 },
+    animate: { opacity: 1, y: 0, scale: 1, transition: { delay: 0.3, duration: 1, ease: 'easeOut' } }
+  };
+
   const gradientSpring = useSpring({
     from: { backgroundPosition: '0% 50%' },
     to: { backgroundPosition: '100% 50%' },
     config: { duration: 8000 },
     loop: { reverse: true }
-  })
+  });
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       <Cursor />
@@ -95,19 +99,24 @@ function Home() {
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           >
             <Lottie animationData={heartAnimation} loop={true} speed={0.25} style={{ width: 400, height: 400 }} />
-
           </motion.div>
         </motion.div>
         <motion.h1 variants={headerTextVariants} initial="initial" animate="animate" className="text-5xl md:text-7xl font-heading font-bold text-neutral-900 text-center mb-12 tracking-tight">
-          {["Embrace", "Your", "Serenity"].map((word, i) => (
-            <motion.span key={i} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.4, duration: 1 }} className="inline-block mr-2 md:mr-4">
+          {["Hey", "friend", ",","You're","SAFE","here"].map((word, i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.4, duration: 1 }}
+              className="inline-block mr-2 md:mr-4"
+            >
               {word}
             </motion.span>
           ))}
         </motion.h1>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 1 }} className="max-w-3xl mx-auto text-center mb-16">
-          <p className="text-lg md:text-xl font-body text-neutral-700 leading-relaxed">
-            Allow the gentle rhythm of your breath and the calm flow of the universe to restore your inner peace.
+          <p className="text-lg md:text-xl font-body text-accent-700/60 leading-relaxed">
+          Let’s focus on your next breath—and nothing more.
           </p>
         </motion.div>
         <motion.div ref={ref} className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full mb-20">
@@ -124,7 +133,7 @@ function Home() {
               whileHover="hover"
               viewport={{ once: true }}
               transition={{ delay: i * 0.2 }}
-              className="bg-white/80 backdrop-blur-xl border border-white/30 rounded-2xl p-8 cursor-pointer shadow-md"
+              className="bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl p-8 cursor-pointer shadow-md transition-all duration-300 hover:backdrop-blur-lg hover:shadow-lg"
             >
               <Link to={item.to}>
                 <h2 className="text-2xl md:text-3xl font-heading text-primary-700 mb-3">{item.title}</h2>
@@ -133,7 +142,6 @@ function Home() {
             </motion.div>
           ))}
         </motion.div>
-
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -148,76 +156,68 @@ function Home() {
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1, duration: 0.8 }}
-            className=" mb-4 ml-14 mt-12 "
+            className="mb-4 ml-14 mt-12"
           >
             Hey buddy,<br />
             I’m really sorry you’re feeling like this right now. I just want you to know—you’re gonna be okay. Seriously. This feeling? It’ll pass. You’re safe, you’re not alone, and most importantly—you are enough, exactly as you are. No need to fix or change anything about yourself right now. Just breathe with me, okay? 🫶
           </motion.p>
-
           <motion.p
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className=" mb-4 ml-14"
+            className="mb-4 ml-14"
           >
             Find a cozy little spot—maybe your bed, your couch, even the floor if that’s where you feel comfy. Wrap yourself up in something soft if you can. Now, hand on your heart, other on your belly. Deep breath in through your nose… 1… 2… 3… 4… hold it… and exhale slowly through your mouth… 6… 5… 4… 3… 2… 1… Nice. Let’s do that a couple more times. You’re doing amazing. 🌬️
           </motion.p>
-
           <motion.p
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className=" mb-4 ml-14"
+            className="mb-4 ml-14"
           >
             Now gently look around you—name three things you can see (maybe your pillow, a photo, your cup?), two things you can hear (the fan? birds? silence?), and one thing you can feel (your blanket, the floor, your breath). This is you coming back to the now. And right now? You’re safe. 🧸🪷
           </motion.p>
-
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.8 }}
-            className=" mb-4 italic ml-14"
+            className="mb-4 italic ml-14"
           >
             Whisper this to yourself (or say it out loud if you want!):<br />
             “I am safe. I am enough. It’s okay to feel this. I’ve got me.”
           </motion.p>
-
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9, duration: 0.8 }}
-            className=" mb-4 ml-14"
+            className="mb-4 ml-14"
           >
             Let those words wrap around you like the warmest, fluffiest blanket ever. 🤍✨
           </motion.p>
-
           <motion.p
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ delay: 1.1, duration: 0.8 }}
-            className=" mb-4 ml-14"
+            className="mb-4 ml-14"
           >
             Now imagine a soft golden light—like sunlight peeking through clouds—gently pouring over you. From your head… down to your chest… your arms… your legs… all the way to your toes. It’s warm, calm, and safe. It’s like the universe itself is giving you a little hug. 🌞
           </motion.p>
-
           <motion.p
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ delay: 1.3, duration: 0.8 }}
-            className=" mb-4 ml-14"
+            className="mb-4 ml-14"
           >
             This feeling might feel huge right now, but it’s just a wave. And waves always pass. You’ve gotten through every single one before—every tough moment, every panic—and you’ll get through this too. You're stronger than your thoughts. 🌊💪
           </motion.p>
-
           <motion.p
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ delay: 1.5, duration: 0.8 }}
-            className=" mb-4 ml-14"
+            className="mb-4 ml-14"
           >
             You don’t have to reach out to anyone right now, but you can if you want. But also—you’re enough all by yourself. You’ve got this. You really do. And I’m so, so proud of you for just breathing and reading this. That’s already a win. 🫂
           </motion.p>
-
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -226,20 +226,19 @@ function Home() {
           >
             Take another breath. Take your time. Be gentle with yourself. Everything’s gonna be okay. Promise.
           </motion.p>
-
           <motion.p
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ delay: 1.9, duration: 0.8 }}
-            className=" font-bold ml-14"
+            className="font-bold ml-14"
           >
             Big warm hug, <br />
-            Your Friend <br/>Relevia 💛
+            Your Friend <br />Relevia 💛
           </motion.p>
         </motion.div>
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 1 }} className="text-center">
           <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-3xl md:text-4xl font-heading text-neutral-900 mb-6">
-            Lets bein the journey to calm...
+            Let's begin the journey to calm...
           </motion.h2>
           <div className="flex flex-col sm:flex-row justify-center gap-6">
             {[
@@ -260,7 +259,7 @@ function Home() {
         <motion.div className="absolute right-16 bottom-10 w-7 h-7 bg-secondary-400 rounded-full" animate={{ y: [0, -20, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }} />
       </motion.div>
     </div>
-  )
+  );
 }
 
-export default Home
+export default Home;

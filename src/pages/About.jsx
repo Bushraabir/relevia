@@ -1,223 +1,252 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import Fluid from '../components/Fluid';
 
 const sectionVariants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0 },
+  hidden: { opacity: 0, y: 50, scale: 0.95 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: 'easeOut' } },
+};
+
+const cardVariants = {
+  initial: { opacity: 0, y: 50, rotateX: -10 },
+  animate: { opacity: 1, y: 0, rotateX: 0, transition: { duration: 0.7, ease: 'easeOut' } },
+  hover: { 
+    scale: 1.03, 
+    rotate: 0.5, 
+    boxShadow: '0 15px 30px rgba(0, 0, 0, 0.1)', 
+    transition: { type: 'spring', stiffness: 200, damping: 15 } 
+  },
+  tap: { scale: 0.98, transition: { duration: 0.2 } },
 };
 
 function About() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-100 to-secondary-100 pt-20 pb-8">
-      <div className="container mx-auto p-4">
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-4xl md:text-5xl font-heading font-bold mb-4 text-neutral-800 text-center"
-        >
-          What is it Actually?
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.2 }}
-          className="text-neutral-600 font-body mb-12 text-center max-w-3xl mx-auto text-lg"
-        >
-          Panic attacks are sudden episodes of intense fear or discomfort, often with physical symptoms like a racing heart, sweating, or shortness of breath. They’re a normal response to stress or anxiety and affect millions of people. You’re not alone, and they can be managed.
-        </motion.p>
+    <div className="min-h-screen relative overflow-hidden">
+   
+      <Fluid />
 
-        <div className="md:grid md:grid-cols-4 md:gap-8">
-          <div className="md:col-span-1 md:sticky md:top-20 mb-12 md:mb-0">
-            <h2 className="text-2xl font-heading font-semibold text-primary-600 mb-4">Table of Contents</h2>
-            <ul className="list-disc pl-6 text-neutral-600 font-body space-y-2">
-              <li><a href="#what-are-panic-attacks" className="hover:underline hover:text-primary-500 transition duration-300">What Are Panic Attacks?</a></li>
-              <li><a href="#science-behind-panic-attacks" className="hover:underline hover:text-primary-500 transition duration-300">The Science Behind Panic Attacks</a></li>
-              <li><a href="#traditional-advice" className="hover:underline hover:text-primary-500 transition duration-300">Why Traditional Advice Might Not Work</a></li>
-              <li><a href="#new-approach" className="hover:underline hover:text-primary-500 transition duration-300">A New Approach: Accepting and Welcoming Panic</a></li>
-              <li><a href="#practical-steps" className="hover:underline hover:text-primary-500 transition duration-300">Practical Steps to Manage a Panic Attack</a></li>
-              <li><a href="#long-term-strategies" className="hover:underline hover:text-primary-500 transition duration-300">Long-Term Strategies for Prevention</a></li>
-              <li><a href="#conclusion" className="hover:underline hover:text-primary-500 transition duration-300">Conclusion</a></li>
-            </ul>
-          </div>
-          <div className="md:col-span-3 space-y-16">
-            <motion.section
-              id="what-are-panic-attacks"
-              variants={sectionVariants}
-              initial="hidden"
-              whileInView="visible"
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true, amount: 0.2 }}
-              className="bg-white bg-opacity-20 backdrop-filter backdrop-blur-md border border-white/30 p-8 rounded-xl"
-            >
-              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 text-neutral-800">What Are Panic Attacks?</h2>
-              <p className="text-neutral-600 font-body mb-4 text-lg">
-                Picture this: your heart races, your chest tightens, and you feel like you might faint—or worse, that you’re facing a life-threatening emergency like a heart attack or stroke. That’s how countless poets and writers have described a panic attack—a sudden, intense wave of fear and physical symptoms so powerful that it’s often mistaken for a medical crisis. Studies indicate that nearly one-third of people will encounter at least one panic attack in their lifetime, making it a surprisingly common experience.
-              </p>
-              <p className="text-neutral-600 font-body text-lg">
-                Though panic attacks don’t cause lasting physical damage, their aftermath can be debilitating. The fear of another episode can disrupt daily life, sometimes even triggering more attacks. They differ from what some call “anxiety attacks,” which refer to overwhelming stress or anxiety with intense physical sensations that hinder functioning. Understanding this distinction is the first step to managing them, as it sheds light on why they feel so consuming.
-              </p>
-            </motion.section>
+   
+      <div className="relative z-10 pt-24 pb-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        
+          <motion.h1
+            initial={{ opacity: 0, y: -40, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.9, ease: 'easeOut', delay: 0.1 }}
+            className="text-4xl sm:text-5xl lg:text-6xl font-heading font-extrabold mb-6 text-neutral-900 text-center tracking-tight"
+          >
+            What is it Actually?
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.3, ease: 'easeOut' }}
+            className="text-neutral-700 font-body mb-16 text-center max-w-3xl mx-auto text-lg sm:text-xl lg:text-2xl leading-relaxed"
+          >
+            Panic attacks are sudden surges of intense fear or discomfort, often paired with symptoms like a racing heart, sweating, or shortness of breath. They’re a natural reaction to stress or anxiety, touching millions globally. You’re not alone, and there’s a way through.
+          </motion.p>
 
-            <motion.section
-              id="science-behind-panic-attacks"
-              variants={sectionVariants}
-              initial="hidden"
-              whileInView="visible"
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true, amount: 0.2 }}
-              className="bg-white bg-opacity-20 backdrop-filter backdrop-blur-md border border-white/30 p-8 rounded-xl"
-            >
-              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 text-neutral-800">The Science Behind Panic Attacks</h2>
-              <p className="text-neutral-600 font-body mb-4 text-lg">
-                At their core, panic attacks are an exaggerated version of the body’s natural reaction to danger—the fight-or-flight response. This process begins in the amygdala, the brain’s fear-processing center. When it senses a threat, whether real or imagined, it signals the sympathetic nervous system to release adrenaline. This hormone ramps up your heart rate and breathing, sending blood and oxygen to your muscles and brain to prepare you for action.
-              </p>
-              <p className="text-neutral-600 font-body mb-4 text-lg">
-                In a panic attack, however, this response goes into overdrive. Far beyond what’s needed for a genuine threat, it leads to symptoms like a pounding heart, rapid breathing (or hyperventilation), dizziness, and numbness in the hands and feet. This happens because hyperventilation reduces carbon dioxide in the blood, leaving too much oxygen and causing blood vessels to constrict—sometimes mimicking chest pain akin to a heart attack.
-              </p>
-              <p className="text-neutral-600 font-body text-lg">
-                Typically, this intense reaction peaks within 10 minutes. Then, the prefrontal cortex steps in, activating the parasympathetic nervous system to release acetylcholine, which slows the heart rate and winds down the attack. Environmental cues tied to past trauma or anxiety disorders—like PTSD, OCD, or social anxiety—can spark this response, though the exact cause remains unclear.
-              </p>
-            </motion.section>
-
-            <motion.section
-              id="traditional-advice"
-              variants={sectionVariants}
-              initial="hidden"
-              whileInView="visible"
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true, amount: 0.2 }}
-              className="bg-white bg-opacity-20 backdrop-filter backdrop-blur-md border border-white/30 p-8 rounded-xl"
-            >
-              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 text-neutral-800">Why Traditional Advice Might Not Work</h2>
-              <p className="text-neutral-600 font-body mb-4 text-lg">
-                When a panic attack hits, the go-to advice is often to “calm down” or “take slow breaths.” But here’s the catch: this can make things worse. The more you try to control symptoms like a racing heart or shortness of breath, the more you signal to your brain that these sensations are dangerous. This fuels a vicious cycle—your anxiety spikes, your heart beats faster, and the panic intensifies.
-              </p>
-              <p className="text-neutral-600 font-body text-lg">
-                For example, focusing on slowing your breathing might heighten your awareness of physical discomfort, amplifying the fear. Even attempts to “embrace” the panic in a zen-like way can backfire if you’re still treating the sensations as something to endure rather than accept. This paradox reveals why conventional wisdom often falls short for those grappling with panic disorder.
-              </p>
-            </motion.section>
-
-            <motion.section
-              id="new-approach"
-              variants={sectionVariants}
-              initial="hidden"
-              whileInView="visible"
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true, amount: 0.2 }}
-              className="bg-white bg-opacity-20 backdrop-filter backdrop-blur-md border border-white/30 p-8 rounded-xl"
-            >
-              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 text-neutral-800">A New Approach: Accepting and Welcoming Panic</h2>
-              <p className="text-neutral-600 font-body mb-4 text-lg">
-                What if the key to stopping a panic attack isn’t fighting it, but leaning into it? This unconventional strategy, inspired by Barry McDonagh’s book Dare, suggests welcoming the sensations instead of resisting them. Take Jon’s story: after 30 years of panic disorder triggered by travel, he found freedom by rethinking his approach.
-              </p>
-              <p className="text-neutral-600 font-body mb-4 text-lg">
-                On a flight from the UK to Austria, Jon felt the familiar rise of anxiety as the plane door closed. Instead of trying to calm down, he labeled his fearful thoughts—“What if I have a panic attack? This is catastrophic!”—as “panic story number two.” Then, he did something radical: he turned off his headphones, pumped his legs, and tapped his knees, daring the panic to get worse. To his surprise, it didn’t. The more he tried to amplify it, the more it faded, leaving him relaxed enough to watch Netflix.
-              </p>
-              <p className="text-neutral-600 font-body text-lg">
-                This works because inviting panic breaks the fear cycle. By showing your brain that these sensations aren’t a threat, you prove they’re safe to experience. It’s a shift from enduring to confronting—a paper tiger that loses its power when you face it head-on.
-              </p>
-            </motion.section>
-
-            <motion.section
-              id="practical-steps"
-              variants={sectionVariants}
-              initial="hidden"
-              whileInView="visible"
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true, amount: 0.2 }}
-              className="bg-white bg-opacity-20 backdrop-filter backdrop-blur-md border border-white/30 p-8 rounded-xl"
-            >
-              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 text-neutral-800">Practical Steps to Manage a Panic Attack</h2>
-              <p className="text-neutral-600 font-body mb-4 text-lg">
-                When panic strikes, having a toolkit can make all the difference. Here are practical steps, reimagined from various techniques, to navigate an attack:
-              </p>
-              <ul className="list-disc pl-6 text-neutral-600 font-body space-y-2 text-lg">
-                <li>Spot the Panic Stories: Recognize the lies your mind tells you—like “I’m having a heart attack” or “I’ll pass out”—and label them as stories, not truths.</li>
-                <li>Let Go of the Fight: Stop battling the Lillienations like a racing heart or shortness of breath. They’re a normal response to stress or anxiety and affect millions of people. You’re not alone, and they can be managed.</li>
-                <li>Invite the Sensations: Say, “Bring it on, panic!” Try to make your heart beat faster or your dizziness grow, proving these feelings can’t hurt you.</li>
-                <li>Ground Yourself: Focus on your senses—name five things you see, four you can touch, three you hear, two you smell, and one you taste—to anchor yourself in the present.</li>
-                <li>Engage Your Body: Hold an ice cube, splash cold water on your face, or suck on a sour candy to activate your calming parasympathetic response.</li>
-                <li>Use Positive Self-Talk: Remind yourself, “This is uncomfortable, but not dangerous. It’ll pass like a wave.”</li>
-                <li>Challenge the Fear: Avoid catastrophic thoughts like “Everything’s awful.” Acknowledge the difficulty without labeling it as hopeless.</li>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+            <div className="lg:col-span-1 lg:sticky lg:top-24 mb-12 lg:mb-0">
+              <motion.h2
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="text-2xl sm:text-3xl font-heading font-semibold text-primary-700 mb-6"
+              >
+                Table of Contents
+              </motion.h2>
+              <ul className="list-none pl-0 text-neutral-600 font-body space-y-4">
+                {[
+                  { id: 'what-are-panic-attacks', text: 'What Are Panic Attacks?' },
+                  { id: 'science-behind-panic-attacks', text: 'The Science Behind Panic Attacks' },
+                  { id: 'traditional-advice', text: 'Why Traditional Advice Might Not Work' },
+                  { id: 'new-approach', text: 'A New Approach: Accepting Panic' },
+                  { id: 'practical-steps', text: 'Practical Steps to Manage Panic' },
+                  { id: 'long-term-strategies', text: 'Long-Term Strategies' },
+                  { id: 'conclusion', text: 'Conclusion' },
+                ].map((item, index) => (
+                  <motion.li
+                    key={item.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + index * 0.1 }}
+                  >
+                    <a
+                      href={`#${item.id}`}
+                      className="block py-2 px-4 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-all duration-300 ease-in-out"
+                    >
+                      {item.text}
+                    </a>
+                  </motion.li>
+                ))}
               </ul>
-              <p className="text-neutral-600 font-body mt-4 text-lg">
-                Moving around might ease symptoms slightly, a clue it’s anxiety, not a physical ailment. Walking can feel better than sitting still, reinforcing that you’re safe.
-              </p>
-            </motion.section>
+            </div>
 
-            <motion.section
-              id="long-term-strategies"
-              variants={sectionVariants}
-              initial="hidden"
-              whileInView="visible"
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true, amount: 0.2 }}
-              className="bg-white bg-opacity-20 backdrop-filter backdrop-blur-md border border-white/30 p-8 rounded-xl"
-            >
-              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 text-neutral-800">Long-Term Strategies for Prevention</h2>
-              <p className="text-neutral-600 font-body mb-4 text-lg">
-                Managing panic in the moment is vital, but preventing future attacks requires a broader approach. Two main treatments stand out: antidepressant medication and Cognitive Behavioral Therapy (CBT). Both help about 40% of people, though they work differently. Medications can have side effects, and half of users relapse after stopping, while CBT offers lasting results with only a 20% relapse rate.
-              </p>
-              <p className="text-neutral-600 font-body mb-4 text-lg">
-                CBT teaches practical skills: understanding the physiology of panic, controlling breathing and muscle tension, restructuring fearful thoughts (e.g., replacing “I’ll die” with “This will pass”), and gradually facing triggering sensations or situations. Outside therapy, life management is key. This means:
-              </p>
-              <ul className="list-disc pl-6 text-neutral-600 font-body space-y-2 text-lg">
-                <li>Set Boundaries: Protect your energy by saying no when needed.</li>
-                <li>Balance Your Life: Manage finances, process trauma, and keep a sustainable schedule with rest.</li>
-                <li>Care for Your Body: Exercise, eat regularly, cut caffeine, and get enough sleep.</li>
-                <li>Practice Daily Calm: Meditate, breathe deeply, or journal to track triggers and emotions.</li>
-                <li>Know Your Control: Address what you can change and let go of what you can’t.</li>
-              </ul>
-              <p className="text-neutral-600 font-body mt-4 text-lg">
-                Frequent attacks or constant worry about them might signal panic disorder, but these steps can reduce their grip over time.
-              </p>
-            </motion.section>
+            <div className="lg:col-span-3 space-y-16">
+              <motion.section
+                id="what-are-panic-attacks"
+                variants={cardVariants}
+                initial="initial"
+                whileInView="animate"
+                whileHover="hover"
+                whileTap="tap"
+                viewport={{ once: true, amount: 0.3 }}
+                className="bg-white/20 backdrop-blur-2xl border border-white/40 p-8 rounded-2xl shadow-lg transform-gpu"
+              >
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold mb-6 text-neutral-900">What Are Panic Attacks?</h2>
+                <p className="text-neutral-700 font-body mb-4 text-lg sm:text-xl leading-relaxed">
+                  Imagine your heart pounding, chest constricting, and a sense that you might collapse—or worse, that you’re in mortal danger. Poets and writers have long painted panic attacks as overwhelming torrents of fear and physical chaos, often mistaken for emergencies like heart attacks. Research shows nearly one in three people will face this at least once—a shared human thread.
+                </p>
+                <p className="text-neutral-700 font-body text-lg sm:text-xl leading-relaxed">
+                  While they leave no physical scars, their echo can unsettle daily life, sparking dread of the next wave. Distinct from “anxiety attacks”—a term for intense stress with physical overwhelm—panic attacks demand recognition to tame their grip.
+                </p>
+              </motion.section>
 
-            <motion.section
-              id="conclusion"
-              variants={sectionVariants}
-              initial="hidden"
-              whileInView="visible"
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true, amount: 0.2 }}
-              className="bg-white bg-opacity-20 backdrop-filter backdrop-blur-md border border-white/30 p-8 rounded-xl"
-            >
-              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 text-neutral-800">Conclusion</h2>
-              <p className="text-neutral-600 font-body text-lg">
-                Panic attacks may feel like your body’s turned against you, but they’re a common human experience—one you can learn to handle. By understanding their mechanics and embracing rather than fearing them, you can break free from their cycle. Whether it’s your first attack or your hundredth, you’re not alone, and you’re stronger than you think. For extra support, explore therapy, online resources like the “Therapy in a Nutshell” panic attack playlist, or courses on processing emotions. Each step forward is a victory over panic’s hold on your life.
-              </p>
-            </motion.section>
+              <motion.section
+                id="science-behind-panic-attacks"
+                variants={cardVariants}
+                initial="initial"
+                whileInView="animate"
+                whileHover="hover"
+                whileTap="tap"
+                viewport={{ once: true, amount: 0.3 }}
+                className="bg-white/20 backdrop-blur-2xl border border-white/40 p-8 rounded-2xl shadow-lg transform-gpu"
+              >
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold mb-6 text-neutral-900">The Science Behind Panic Attacks</h2>
+                <p className="text-neutral-700 font-body mb-4 text-lg sm:text-xl leading-relaxed">
+                  Panic attacks amplify the body’s fight-or-flight instinct. It starts in the amygdala, your brain’s alarm bell, which, sensing danger—real or not—triggers adrenaline via the sympathetic nervous system. Your heart races, breaths quicken, and muscles brace for action.
+                </p>
+                <p className="text-neutral-700 font-body text-lg sm:text-xl leading-relaxed">
+                  But in panic, this escalates beyond reason. Hyperventilation slashes carbon dioxide, constricting blood vessels and mimicking heart attack-like pain, alongside dizziness or numbness. It peaks in 10 minutes, then the prefrontal cortex dials it back with acetylcholine, calming the storm.
+                </p>
+              </motion.section>
+
+              <motion.section
+                id="traditional-advice"
+                variants={cardVariants}
+                initial="initial"
+                whileInView="animate"
+                whileHover="hover"
+                whileTap="tap"
+                viewport={{ once: true, amount: 0.3 }}
+                className="bg-white/20 backdrop-blur-2xl border border-white/40 p-8 rounded-2xl shadow-lg transform-gpu"
+              >
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold mb-6 text-neutral-900">Why Traditional Advice Might Not Work</h2>
+                <p className="text-neutral-700 font-body mb-4 text-lg sm:text-xl leading-relaxed">
+                  “Calm down” or “breathe slow” sound wise, but they can backfire. Trying to tame a racing heart or gasping lungs tells your brain these are threats, spiking anxiety and tightening the panic loop.
+                </p>
+                <p className="text-neutral-700 font-body text-lg sm:text-xl leading-relaxed">
+                  Fixating on breath control can sharpen focus on discomfort, fueling fear. Even “embracing” panic can flop if it’s just grudging tolerance, not true acceptance—leaving traditional tips shaky for many.
+                </p>
+              </motion.section>
+
+              <motion.section
+                id="new-approach"
+                variants={cardVariants}
+                initial="initial"
+                whileInView="animate"
+                whileHover="hover"
+                whileTap="tap"
+                viewport={{ once: true, amount: 0.3 }}
+                className="bg-white/20 backdrop-blur-2xl border border-white/40 p-8 rounded-2xl shadow-lg transform-gpu"
+              >
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold mb-6 text-neutral-900">A New Approach: Accepting Panic</h2>
+                <p className="text-neutral-700 font-body mb-4 text-lg sm:text-xl leading-relaxed">
+                  What if fighting panic isn’t the answer, but inviting it is? Inspired by *Dare* by Barry McDonagh, this flips the script. Jon, after 30 years of travel-triggered panic, found peace this way.
+                </p>
+                <p className="text-neutral-700 font-body text-lg sm:text-xl leading-relaxed">
+                  On a UK-to-Austria flight, as dread crept in, Jon named his fears—“panic story number two”—and dared them to worsen. He pumped his legs, tapped his knees, and leaned in. Instead of growing, the panic shrank, letting him unwind with Netflix.
+                </p>
+              </motion.section>
+
+              <motion.section
+                id="practical-steps"
+                variants={cardVariants}
+                initial="initial"
+                whileInView="animate"
+                whileHover="hover"
+                whileTap="tap"
+                viewport={{ once: true, amount: 0.3 }}
+                className="bg-white/20 backdrop-blur-2xl border border-white/40 p-8 rounded-2xl shadow-lg transform-gpu"
+              >
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold mb-6 text-neutral-900">Practical Steps to Manage Panic</h2>
+                <ul className="list-disc pl-6 text-neutral-700 font-body space-y-3 text-lg sm:text-xl leading-relaxed">
+                  <li>Spot the Stories: Label thoughts like “I’m dying” as mere tales, not facts.</li>
+                  <li>Drop the Fight: Let sensations flow—they’re normal and safe for millions.</li>
+                  <li>Invite It In: Dare panic to ramp up, showing it’s harmless.</li>
+                  <li>Ground Yourself: Name 5 sights, 4 touches, 3 sounds, 2 smells, 1 taste.</li>
+                  <li>Engage Your Body: Grip ice, splash water, or taste sour to calm nerves.</li>
+                </ul>
+              </motion.section>
+
+              <motion.section
+                id="long-term-strategies"
+                variants={cardVariants}
+                initial="initial"
+                whileInView="animate"
+                whileHover="hover"
+                whileTap="tap"
+                viewport={{ once: true, amount: 0.3 }}
+                className="bg-white/20 backdrop-blur-2xl border border-white/40 p-8 rounded-2xl shadow-lg transform-gpu"
+              >
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold mb-6 text-neutral-900">Long-Term Strategies</h2>
+                <ul className="list-disc pl-6 text-neutral-700 font-body space-y-3 text-lg sm:text-xl leading-relaxed">
+                  <li>Guard Energy: Say no when you must.</li>
+                  <li>Balance Life: Sort finances, heal wounds, rest well.</li>
+                  <li>Nurture Body: Move, eat, skip caffeine, sleep.</li>
+                  <li>Daily Peace: Meditate, breathe, journal triggers.</li>
+                  <li>Own Control: Fix what you can, release what you can’t.</li>
+                </ul>
+              </motion.section>
+
+              <motion.section
+                id="conclusion"
+                variants={cardVariants}
+                initial="initial"
+                whileInView="animate"
+                whileHover="hover"
+                whileTap="tap"
+                viewport={{ once: true, amount: 0.3 }}
+                className="bg-white/20 backdrop-blur-2xl border border-white/40 p-8 rounded-2xl shadow-lg transform-gpu"
+              >
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold mb-6 text-neutral-900">Conclusion</h2>
+                <p className="text-neutral-700 font-body text-lg sm:text-xl leading-relaxed">
+                  Panic attacks might feel like betrayal, but they’re human—and conquerable. Knowing them and welcoming them cuts their power. You’re tougher than you know.
+                </p>
+              </motion.section>
+            </div>
           </div>
+
+
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: 'easeOut' }}
+            viewport={{ once: true }}
+            className="text-center mt-20"
+          >
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-semibold text-neutral-900 mb-6">Explore More Resources</h2>
+            <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
+              <motion.div whileHover={{ scale: 1.08, rotate: 2 }} whileTap={{ scale: 0.95 }}>
+                <Link to="/relevia/resources" className="bg-primary-600 text-white px-8 py-4 rounded-xl shadow-lg hover:bg-primary-700 transition-all duration-300 font-body text-lg">
+                  Our Resources
+                </Link>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.08, rotate: -2 }} whileTap={{ scale: 0.95 }}>
+                <a
+                  href="https://www.therapyinanutshell.com/panic-attacks-playlist"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-secondary-600 text-white px-8 py-4 rounded-xl shadow-lg hover:bg-secondary-700 transition-all duration-300 font-body text-lg"
+                >
+                  Therapy in a Nutshell
+                </a>
+              </motion.div>
+            </div>
+          </motion.div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mt-16"
-        >
-          <h2 className="text-2xl md:text-3xl font-heading font-semibold text-neutral-800 mb-4">Explore More Resources</h2>
-          <p className="text-neutral-600 font-body mb-8 text-lg">Deepen your understanding and find support with these tools and communities.</p>
-          <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link to="/relevia/resources" className="bg-primary-500 text-white px-6 py-3 rounded-lg shadow-soft hover:bg-primary-600 transition duration-300 font-body">
-                Our Resources
-              </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <a href="https://www.therapyinanutshell.com/panic-attacks-playlist" target="_blank" rel="noopener noreferrer" className="bg-secondary-500 text-white px-6 py-3 rounded-lg shadow-soft hover:bg-secondary-600 transition duration-300 font-body">
-                Therapy in a Nutshell
-              </a>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link to="/relevia/contact" className="bg-accent-500 text-white px-6 py-3 rounded-lg shadow-soft hover:bg-accent-600 transition duration-300 font-body">
-                Contact Support
-              </Link>
-            </motion.div>
-          </div>
-        </motion.div>
       </div>
     </div>
   );

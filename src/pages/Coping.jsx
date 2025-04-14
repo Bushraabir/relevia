@@ -2,121 +2,280 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaLungs, FaEye, FaHandSparkles, FaImages, FaSmile, FaRunning, FaPen } from 'react-icons/fa';
+import { Player } from '@lottiefiles/react-lottie-player';
+import copingAnimation from '../assets/animation/coping.json';
 
 const containerVariants = {
-  hidden: { opacity: 0, scale: 0.9 },
-  show: { 
-    opacity: 1, 
-    scale: 1, 
-    transition: { 
-      staggerChildren: 0.2, 
-      delayChildren: 0.4, 
-      ease: 'easeOut' 
-    } 
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.3,
+      delayChildren: 0.5,
+      ease: 'easeOut',
+    },
   },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 50, rotate: -5 },
-  show: { 
-    opacity: 1, 
-    y: 0, 
-    rotate: 0, 
-    transition: { 
-      duration: 1, 
-      ease: 'easeOut' 
-    } 
+const cardVariants = {
+  hidden: { opacity: 0, y: 50, rotate: -5, backgroundColor: 'rgba(255,255,255,0)' },
+  show: {
+    opacity: 1,
+    y: 0,
+    rotate: 0,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    transition: { duration: 1, ease: 'easeOut' },
   },
-  hover: { 
-    scale: 1.08, 
-    rotate: 2, 
-    boxShadow: '0px 15px 40px rgba(0, 0, 0, 0.15)', 
-    transition: { 
-      duration: 0.4, 
-      ease: 'easeInOut' 
-    } 
+  hover: {
+    scale: 1.05,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    boxShadow: '0px 15px 40px rgba(0, 0, 0, 0.15)',
+    borderColor: '#2c7a7b',
+    transition: { duration: 0.4, ease: 'easeInOut' },
   },
-  tap: { 
-    scale: 0.95, 
-    transition: { 
-      duration: 0.2 
-    } 
-  }
+  tap: { scale: 0.95, transition: { duration: 0.2 } },
 };
+
+const iconVariants = {
+  show: { scale: 1 },
+  hover: {
+    scale: [1, 1.1, 1],
+    transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+  },
+};
+
+const blobColors = ['bg-blue-200/30', 'bg-purple-200/30', 'bg-teal-200/30', 'bg-green-200/30'];
+
+const MotionFaLungs = motion(FaLungs);
+const MotionFaEye = motion(FaEye);
+const MotionFaHandSparkles = motion(FaHandSparkles);
+const MotionFaImages = motion(FaImages);
+const MotionFaSmile = motion(FaSmile);
+const MotionFaRunning = motion(FaRunning);
+const MotionFaPen = motion(FaPen);
 
 const techniques = [
   {
     id: 'breathing',
     title: 'Deep Breathing',
-    description: 'Regulate your breath with the 4-4-4 technique to calm your nervous system.',
-    icon: <FaLungs className="text-5xl text-teal-600" />,
+    description: 'Try the 4-4-4 breathing technique to help calm your nervous system.',
+    icon: <MotionFaLungs className="text-5xl text-teal-600" variants={iconVariants} />,
     path: '/relevia/coping/breathing',
   },
   {
     id: 'mindfulness',
     title: 'Mindfulness',
-    description: 'Ground yourself using the 5-4-3-2-1 sensory technique.',
-    icon: <FaEye className="text-5xl text-teal-600" />,
+    description: 'You can ground yourself with the 5-4-3-2-1 sensory technique.',
+    icon: <MotionFaEye className="text-5xl text-teal-600" variants={iconVariants} />,
     path: '/relevia/coping/mindfulness',
   },
   {
     id: 'relaxation',
     title: 'Progressive Relaxation',
-    description: 'Release tension by tensing and relaxing muscle groups.',
-    icon: <FaHandSparkles className="text-5xl text-teal-600" />,
+    description: 'Let’s release tension together by tensing and relaxing your muscles.',
+    icon: <MotionFaHandSparkles className="text-5xl text-teal-600" variants={iconVariants} />,
     path: '/relevia/coping/relaxation',
   },
   {
     id: 'visualization',
     title: 'Visualization',
-    description: 'Imagine a peaceful scene to soothe your mind.',
-    icon: <FaImages className="text-5xl text-teal-600" />,
+    description: 'Picture a peaceful scene to help soothe your mind.',
+    icon: <MotionFaImages className="text-5xl text-teal-600" variants={iconVariants} />,
     path: '/relevia/coping/visualization',
   },
   {
     id: 'affirmations',
     title: 'Positive Affirmations',
-    description: 'Repeat calming phrases to shift your mindset.',
-    icon: <FaSmile className="text-5xl text-teal-600" />,
+    description: 'Try repeating calming phrases to help shift your mindset.',
+    icon: <MotionFaSmile className="text-5xl text-teal-600" variants={iconVariants} />,
     path: '/relevia/coping/affirmations',
   },
   {
     id: 'activity',
     title: 'Physical Activity',
-    description: 'Engage in light movement to release stress.',
-    icon: <FaRunning className="text-5xl text-teal-600" />,
+    description: 'Engage in some light movement to help release stress.',
+    icon: <MotionFaRunning className="text-5xl text-teal-600" variants={iconVariants} />,
     path: '/relevia/coping/activity',
   },
   {
     id: 'journaling',
     title: 'Journaling',
-    description: 'Write your thoughts to process emotions.',
-    icon: <FaPen className="text-5xl text-teal-600" />,
+    description: 'Writing down your thoughts can help you process your emotions.',
+    icon: <MotionFaPen className="text-5xl text-teal-600" variants={iconVariants} />,
     path: '/relevia/coping/journaling',
   },
 ];
 
+const Button = ({ to, text, colorVariants }) => {
+  return (
+    <motion.div
+      variants={{
+        initial: { scale: 0 },
+        visible: { scale: 1, transition: { type: 'spring', stiffness: 260, damping: 20 } },
+        hover: { y: -6, transition: { duration: 0.5, ease: 'easeInOut' } },
+        tap: { y: 2, scale: 0.95, transition: { duration: 0.2, ease: 'easeInOut' } }
+      }}
+      initial="initial"
+      animate="visible"
+      whileHover="hover"
+      whileTap="tap"
+      className="relative"
+    >
+      <motion.div
+        className="absolute inset-0 rounded-full z-0"
+        variants={{
+          visible: { boxShadow: `0 0 0 ${colorVariants.glow}` },
+          hover: { boxShadow: `0 0 20px 4px ${colorVariants.glow}`, transition: { duration: 0.5, ease: 'easeInOut' } }
+        }}
+      />
+      <motion.div
+        className="absolute inset-0 rounded-full"
+        variants={{
+          visible: { scale: 1, opacity: 1 },
+          hover: { scale: 1.2, opacity: 0, transition: { duration: 0.5, ease: 'easeInOut' } }
+        }}
+      />
+      <Link to={to} className="relative z-10 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full shadow-lg text-base sm:text-lg font-semibold block">
+        <motion.div
+          variants={{
+            visible: { y: 0, backgroundColor: colorVariants.bg, boxShadow: `0 4px 12px ${colorVariants.shadow}` },
+            hover: {
+              y: -4,
+              backgroundColor: colorVariants.hoverBg,
+              boxShadow: `0 12px 32px ${colorVariants.shadowHover}`,
+              transition: { duration: 0.5, ease: 'easeInOut' }
+            },
+            tap: {
+              y: 2,
+              scale: 0.98,
+              backgroundColor: colorVariants.tapBg,
+              boxShadow: `0 2px 8px ${colorVariants.shadowTap}`,
+              transition: { duration: 0.2, ease: 'easeInOut' }
+            }
+          }}
+          className="px-6 sm:px-10 py-3 sm:py-4 rounded-full"
+        >
+          <motion.span
+            className="relative z-20"
+            variants={{
+              hover: {
+                letterSpacing: '0.05em',
+                textShadow: '0 2px 8px rgba(255,255,255,0.3)',
+                transition: { duration: 0.5, ease: 'easeInOut' }
+              }
+            }}
+          >
+            {text}
+          </motion.span>
+          <motion.div
+            className="absolute inset-0"
+            variants={{
+              hover: { transition: { staggerChildren: 0.1 } }
+            }}
+          >
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                className={`absolute ${colorVariants.particle} rounded-full`}
+                style={{
+                  width: `${Math.random() * 4 + 2}px`,
+                  height: `${Math.random() * 4 + 2}px`,
+                  top: `${Math.random() * 80 + 10}%`,
+                  left: `${Math.random() * 80 + 10}%`,
+                }}
+                variants={{
+                  visible: { scale: 0, opacity: 0 },
+                  hover: {
+                    scale: [0, 1.5, 0],
+                    opacity: [0, 1, 0],
+                    x: [0, (Math.random() - 0.5) * 40, 0],
+                    y: [0, (Math.random() - 0.5) * 40, 0],
+                    transition: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: 'easeInOut'
+                    }
+                  }
+                }}
+              />
+            ))}
+          </motion.div>
+          <motion.div
+            className="absolute inset-0"
+            initial={{ x: '-100%' }}
+            variants={{
+              hover: {
+                x: '200%',
+                transition: {
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: 'linear'
+                }
+              }
+            }}
+            style={{
+              background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent)'
+            }}
+          />
+        </motion.div>
+      </Link>
+    </motion.div>
+  );
+};
+
 function Coping() {
   const [activeTechnique, setActiveTechnique] = useState(null);
 
+  const resourcesColors = {
+    bg: '#0d9488',
+    hoverBg: '#115e59',
+    tapBg: '#0c7a6e',
+    shadow: 'rgba(13, 148, 136, 0.25)',
+    shadowHover: 'rgba(13, 148, 136, 0.4)',
+    shadowTap: 'rgba(13, 148, 136, 0.2)',
+    glow: 'rgba(13, 148, 136, 0.5)',
+    particle: 'bg-white/40'
+  };
+
+  const contactColors = {
+    bg: '#7c3aed',
+    hoverBg: '#6d28d9',
+    tapBg: '#5b21b6',
+    shadow: 'rgba(124, 58, 237, 0.25)',
+    shadowHover: 'rgba(124, 58, 237, 0.4)',
+    shadowTap: 'rgba(124, 58, 237, 0.2)',
+    glow: 'rgba(124, 58, 237, 0.5)',
+    particle: 'bg-purple-300/40'
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-purple-100 pt-28 pb-20 relative overflow-hidden">
-      <motion.div
-        animate={{ x: [-120, 120, -120], y: [-60, 60, -60], rotate: [0, 10, 0] }}
-        transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-0 left-0 w-80 h-80 bg-blue-200/30 rounded-full blur-3xl"
-      />
-      <motion.div
-        animate={{ x: [120, -120, 120], y: [60, -60, 60], rotate: [0, -10, 0] }}
-        transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute bottom-0 right-0 w-80 h-80 bg-purple-200/30 rounded-full blur-3xl"
-      />
-      <div className="container mx-auto px-8 relative z-10">
+      {blobColors.map((color, index) => (
+        <motion.div
+          key={index}
+          className={`absolute w-80 h-80 ${color} rounded-full blur-3xl`}
+          style={{
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            x: [0, Math.random() * 100 - 50, 0],
+            y: [0, Math.random() * 100 - 50, 0],
+            rotate: [0, Math.random() * 20 - 10, 0],
+          }}
+          transition={{
+            duration: 20 + Math.random() * 15,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      ))}
+      <div className="container mx-auto px-4 sm:px-8 relative z-10">
         <motion.h1
           initial={{ opacity: 0, y: -40, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1.2, ease: 'easeOut' }}
-          className="text-6xl font-bold text-gray-900 text-center mb-8 tracking-tight"
+          className="text-4xl sm:text-6xl font-bold text-gray-900 text-center mb-8 tracking-tight"
         >
           Coping Techniques
         </motion.h1>
@@ -124,38 +283,156 @@ function Coping() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.4, delay: 0.4, ease: 'easeOut' }}
-          className="text-gray-700 text-xl text-center max-w-2xl mx-auto mb-16 leading-relaxed"
+          className="text-gray-700 text-lg sm:text-xl text-center max-w-2xl mx-auto mb-16 leading-relaxed"
         >
-          Discover soothing techniques designed to restore calm and empower you during moments of overwhelm.
+          Explore these gentle techniques to help you find calm and feel empowered when things feel overwhelming.
         </motion.p>
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.6, ease: 'easeOut' }}
-          className="text-center mb-20 bg-white/20 backdrop-blur-xl p-10 rounded-3xl border border-white/30 shadow-xl"
+          className="flex flex-col sm:flex-row items-center justify-center mb-20"
         >
-          <motion.h2
-            animate={{ y: [0, -5, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className="text-4xl font-semibold text-gray-900 mb-6"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, ease: 'easeOut' }}
+            className="w-full sm:w-1/2 flex justify-center"
           >
-            Seeking Instant Relief?
-          </motion.h2>
-          <p className="text-gray-700 text-lg mb-8">Start with guided breathing to find peace in seconds.</p>
-          <Link to="/relevia/coping/breathing">
-          <motion.button
-          
-            initial={{ scale: 1 }}
-            animate={{ scale: [1, 1.02, 1], transition: { duration: 2, repeat: Infinity } }}
-         
-            whileHover={{ scale: 1.1, rotate: 1, boxShadow: '0 12px 30px rgba(0, 0, 0, 0.2)' }}
-          
-            whileTap={{ scale: 0.95 }}
-            className="bg-teal-600 text-white px-10 py-4 rounded-full shadow-lg hover:bg-teal-700 transition-all duration-300 text-xl font-semibold"
+            <Player
+              autoplay
+              loop
+              src={copingAnimation}
+              style={{ height: '600px', width: '600px', maxWidth: '100%' }}
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 1.2, delay: 0.6, ease: 'easeOut' }}
+            className="w-full sm:w-1/2 text-center"
           >
-            Try Breathing Now
-          </motion.button>
-        </Link>
+            <motion.h2
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-6"
+            >
+              Need Quick Relief?
+            </motion.h2>
+            <p className="text-gray-700 text-lg mb-8">Let’s start with guided breathing to help you find peace in seconds.</p>
+            <Link to="/relevia/coping/breathing">
+              <motion.button
+                variants={{
+                  initial: { 
+                    backgroundColor: '#0d9488',
+                    y: 0
+                  },
+                  hover: {
+                    backgroundColor: '#115e59',
+                    transition: {
+                      duration: 0.6,
+                      ease: [0.4, 0, 0.2, 1]
+                    }
+                  },
+                  tap: {
+                    y: 4
+                  }
+                }}
+                initial="initial"
+                whileHover="hover"
+                whileTap="tap"
+                className="relative bg-teal-600 text-white px-8 sm:px-12 py-4 sm:py-5 rounded-full text-lg sm:text-xl font-semibold overflow-hidden"
+              >
+                <motion.div 
+                  className="absolute inset-0 bg-white/10"
+                  animate={{
+                    scale: [1, 2, 1],
+                    opacity: [0, 0.8, 0],
+                    borderRadius: ["50%", "40%", "50%"],
+                    transition: {
+                      duration: 2.4,
+                      repeat: Infinity,
+                      ease: 'easeInOut'
+                    }
+                  }}
+                />
+                <motion.span
+                  className="relative z-20"
+                  animate={{
+                    y: [-2, 2, -2],
+                    textShadow: [
+                      '0 2px 8px rgba(255,255,255,0)',
+                      '0 4px 24px rgba(255,255,255,0.8)',
+                      '0 2px 8px rgba(255,255,255,0)'
+                    ],
+                    color: ['#f0fdfa', '#ccfbf1', '#f0fdfa']
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: 'easeInOut'
+                  }}
+                >
+                  Start Breathing Exercise
+                </motion.span>
+                <motion.div
+                  className="absolute inset-0 border-4 border-white/40 rounded-full"
+                  animate={{
+                    scale: [1, 1.4, 1],
+                    opacity: [0, 1, 0],
+                    rotate: [0, 180, 360],
+                    transition: {
+                      duration: 2.8,
+                      repeat: Infinity,
+                      ease: 'anticipate'
+                    }
+                  }}
+                />
+                <motion.div
+                  className="absolute inset-0"
+                  animate={{
+                    transition: {
+                      staggerChildren: 0.2
+                    }
+                  }}
+                >
+                  {[...Array(12)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute bg-white/50 rounded-full"
+                      style={{
+                        width: '10px',
+                        height: '12px',
+                        top: `${Math.random() * 100}%`,
+                        left: `${Math.random() * 100}%`,
+                      }}
+                      animate={{
+                        scale: [0, 1.4, 0],
+                        opacity: [0, 1, 0],
+                        x: [-20, 0, 20],
+                        y: [10, -10, 10]
+                      }}
+                      transition={{
+                        duration: 2.4,
+                        repeat: Infinity,
+                        delay: i * 0.1,
+                        ease: 'circInOut'
+                      }}
+                    />
+                  ))}
+                </motion.div>
+                <motion.div
+                  className="absolute inset-0 border-[6px] border-white/30 rounded-full"
+                  animate={{
+                    scale: [1, 2.2, 1],
+                    opacity: [0, 1, 0],
+                    transition: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: 'easeInOut'
+                    }
+                  }}
+                />
+              </motion.button>
+            </Link>
+          </motion.div>
         </motion.div>
         <motion.div
           variants={containerVariants}
@@ -163,19 +440,14 @@ function Coping() {
           animate="show"
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"
         >
-          {techniques.map(technique => (
+          {techniques.map((technique) => (
             <Link to={technique.path} key={technique.id}>
               <motion.div
-                variants={itemVariants}
+                variants={cardVariants}
                 whileHover="hover"
                 whileTap="tap"
-                className="bg-white/30 backdrop-blur-xl border border-white/40 p-8 rounded-3xl shadow-lg cursor-pointer flex flex-col items-start overflow-hidden relative"
+                className="backdrop-blur-lg border border-white/30 p-8 rounded-3xl shadow-lg cursor-pointer flex flex-col items-start overflow-hidden relative"
               >
-                <motion.div
-                  animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
-                  transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute inset-0 bg-teal-200/20 rounded-3xl"
-                />
                 <div className="flex items-center mb-6 z-10">
                   {technique.icon}
                   <h3 className="text-2xl font-semibold text-teal-700 ml-5">{technique.title}</h3>
@@ -215,22 +487,8 @@ function Coping() {
           </motion.h2>
           <p className="text-gray-700 text-lg mb-10">Access additional resources or reach out for support.</p>
           <div className="flex justify-center gap-8">
-            <motion.div
-              whileHover={{ scale: 1.15, rotate: 3 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <Link to="/relevia/resources" className="bg-teal-600 text-white px-10 py-4 rounded-full shadow-lg hover:bg-teal-700 transition-all duration-300 text-lg font-semibold">
-                Resources
-              </Link>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.15, rotate: -3 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <Link to="/relevia/contact" className="bg-purple-600 text-white px-10 py-4 rounded-full shadow-lg hover:bg-purple-700 transition-all duration-300 text-lg font-semibold">
-                Contact Us
-              </Link>
-            </motion.div>
+            <Button to="/relevia/about" text="Resources" colorVariants={resourcesColors} />
+            <Button to="/relevia/contact" text="Contact Us" colorVariants={contactColors} />
           </div>
         </motion.div>
       </div>
