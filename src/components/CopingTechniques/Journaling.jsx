@@ -1,5 +1,6 @@
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 
 const prompts = [
   "Describe what you're feeling right now.",
@@ -17,8 +18,9 @@ export default function Journaling() {
   const [text, setText] = useState('');
   const [showPrompt, setShowPrompt] = useState(true);
   const [currentPrompt, setCurrentPrompt] = useState(getRandomPrompt());
+  const [isSaving, setIsSaving] = useState(false);
+  const [mood, setMood] = useState(null);
 
-  // Load saved text from local storage on mount
   useEffect(() => {
     const savedText = localStorage.getItem('currentJournalEntry');
     if (savedText) {
@@ -26,12 +28,15 @@ export default function Journaling() {
     }
   }, []);
 
-  // Autosave to local storage with a 1-second debounce
   useEffect(() => {
-    const saveToLocalStorage = setTimeout(() => {
-      localStorage.setItem('currentJournalEntry', text);
-    }, 1000);
-    return () => clearTimeout(saveToLocalStorage);
+    if (text) {
+      setIsSaving(true);
+      const saveToLocalStorage = setTimeout(() => {
+        localStorage.setItem('currentJournalEntry', text);
+        setIsSaving(false);
+      }, 1000);
+      return () => clearTimeout(saveToLocalStorage);
+    }
   }, [text]);
 
   const handleClosePrompt = () => {
@@ -45,32 +50,51 @@ export default function Journaling() {
 
   const handleSave = () => {
     const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
-    const newEntry = { text, timestamp: new Date().toISOString() };
+    const newEntry = { text, timestamp: new Date().toISOString(), mood };
     localStorage.setItem('journalEntries', JSON.stringify([...entries, newEntry]));
     localStorage.removeItem('currentJournalEntry');
     setText('');
+    setMood(null);
     console.log('Entry saved:', newEntry);
   };
 
+  const moods = ['😊 Happy', '😔 Sad', '😡 Angry', '😌 Calm', '😰 Anxious'];
+
   return (
-    <div className="min-h-screen bg-primary-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
-        className="w-full max-w-2xl"
+        className="w-full max-w-2xl bg-white rounded-lg shadow-soft p-6"
       >
-        {/* Title */}
         <motion.h1
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1 }}
           className="text-3xl font-heading text-primary-800 mb-6 text-center"
         >
-          Take a moment to write
+          Take a moment to express...
         </motion.h1>
 
-        {/* Prompt Section */}
+        <div className="mb-6">
+          <h2 className="text-xl font-heading text-primary-800 mb-2">I am feeling..</h2>
+          <div className="flex gap-2">
+            {moods.map((m, index) => (
+              <motion.button
+                key={index}
+                onClick={() => setMood(m)}
+                className={`px-4 py-2 rounded ${mood === m ? 'bg-primary-300 text-white' : 'bg-transparent text-gray-700'}`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {m}
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
+
         <AnimatePresence>
           {showPrompt && (
             <motion.div
@@ -87,7 +111,7 @@ export default function Journaling() {
                 className="absolute top-2 right-2 text-neutral-500 hover:text-neutral-700"
                 aria-label="Close prompt"
               >
-                &times;
+                ×
               </button>
             </motion.div>
           )}
@@ -104,19 +128,28 @@ export default function Journaling() {
           </motion.button>
         )}
 
-        {/* Text Area */}
         <motion.textarea
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="w-full h-96 p-4 text-lg bg-white rounded-lg shadow-soft"
+          className="w-full h-96 p-4 text-lg bg-white rounded-lg shadow-soft focus:ring-2 focus:ring-primary-500"
           style={{ fontFamily: 'Caveat, cursive' }}
           placeholder="Start writing here..."
         />
 
-        {/* Save Button */}
+        {isSaving && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-sm text-neutral-600 mt-2"
+          >
+            Saving...
+          </motion.p>
+        )}
+
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

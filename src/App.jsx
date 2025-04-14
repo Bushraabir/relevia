@@ -28,7 +28,7 @@ function App() {
 
 
 
-        <Route path="/relevia/coping/breathing" element={<Breathing />} />
+    
         <Route path="/relevia/coping/mindfulness" element={<Mindfulness />} />
         <Route path="/relevia/coping/breathing" element={<Breathing />} />
         <Route path="/relevia/coping/relaxation" element={<Relaxation />} />
