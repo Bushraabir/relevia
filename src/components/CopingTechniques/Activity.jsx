@@ -126,10 +126,14 @@ export default function Activity() {
                 key={index}
                 className="bg-white rounded-lg shadow-soft p-6"
                 whileHover={{ scale: 1.05 }}
-                transition={{ type: 'spring', stiffness: 300 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ 
+                  type: 'spring', 
+                  stiffness: 300, 
+                  duration: 0.5, 
+                  delay: index * 0.1 
+                }}
               >
                 <div className="flex items-center mb-4">
                   {benefit.icon}
