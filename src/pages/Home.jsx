@@ -545,8 +545,8 @@ function Home() {
           
           <div className="flex flex-col sm:flex-row justify-center gap-6 sm:gap-8">
             {[
-              { to: '/relevia/about', text: 'Discover Resources', bg: 'bg-primary-500', hover: 'hover:bg-primary-600', shadow: 'shadow-primary-200' },
-              { to: '/relevia/contact', text: 'Connect With Us', bg: 'bg-secondary-500', hover: 'hover:bg-secondary-600', shadow: 'shadow-secondary-200' }
+              { to: '/about', text: 'Discover Resources', bg: 'bg-primary-500', hover: 'hover:bg-primary-600', shadow: 'shadow-primary-200' },
+              { to: '/contact', text: 'Connect With Us', bg: 'bg-secondary-500', hover: 'hover:bg-secondary-600', shadow: 'shadow-secondary-200' }
             ].map((btn, i) => (
               <motion.div 
                 key={i} 
@@ -585,21 +585,21 @@ function Home() {
       >
         {[
           { 
-            to: '/relevia/about', 
+            to: '/about', 
             title: 'Explore Awareness', 
             desc: 'Deep dive into the roots of tranquility and mindfulness. Discover gentle techniques that have helped millions find inner peace.',
             icon: '🧘‍♀️',
             color: 'primary'
           },
           { 
-            to: '/relevia/coping', 
+            to: '/coping', 
             title: 'Soothing Methods', 
             desc: 'Discover gentle ways to ease anxiety and embrace calm. Practical tools you can use anywhere, anytime.',
             icon: '🌿',
             color: 'secondary'
           },
           { 
-            to: '/relevia/medication', 
+            to: '/medication', 
             title: 'Healing Insights', 
             desc: 'Clear and compassionate guidance on medication and wellness. Evidence-based information to help you make informed decisions.',
             icon: '💊',

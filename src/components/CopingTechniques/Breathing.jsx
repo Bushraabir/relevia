@@ -1,6 +1,6 @@
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, Pause, Play, RotateCcw, Settings, Volume2, VolumeX, Moon, Sun } from 'lucide-react';
+import { Pause, Play, RotateCcw, Settings, Volume2, VolumeX, Moon, Sun } from 'lucide-react';
 
 const patterns = {
   calm: {
@@ -69,7 +69,7 @@ const FloatingParticle = ({ delay = 0, color = '#38BDF8' }) => {
   
   return (
     <motion.div
-      className="absolute rounded-full opacity-30"
+      className="absolute rounded-full opacity-30 pointer-events-none"
       style={{
         width: size,
         height: size,
@@ -78,7 +78,7 @@ const FloatingParticle = ({ delay = 0, color = '#38BDF8' }) => {
         bottom: '-10px',
       }}
       animate={{
-        y: [0, -window.innerHeight - 100],
+        y: [0, -800],
         x: [0, (Math.random() - 0.5) * 150],
         opacity: [0, 0.3, 0.2, 0],
         scale: [0.3, 1, 0.8, 0.2]
@@ -93,19 +93,6 @@ const FloatingParticle = ({ delay = 0, color = '#38BDF8' }) => {
   );
 };
 
-const HeartRateVisualizer = ({ isActive, bpm = 65 }) => {
-  return (
-    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
-      <motion.div
-        animate={isActive ? { scale: [1, 1.08, 1] } : {}}
-        transition={{ duration: 60/bpm, repeat: Infinity }}
-      >
-        <Heart className={`w-6 h-6 ${isActive ? 'text-pink-300' : 'text-slate-400'}`} fill="currentColor" />
-      </motion.div>
-    </div>
-  );
-};
-
 const BreathingGuide = ({ phase, progress, isActive, color }) => {
   if (!isActive || !phase) return null;
   
@@ -117,7 +104,7 @@ const BreathingGuide = ({ phase, progress, isActive, color }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: isActive ? 0.4 : 0 }}
     >
-      <svg width="400" height="400" viewBox="0 0 400 400" className="absolute">
+      <svg width="320" height="320" viewBox="0 0 320 320" className="absolute">
         <defs>
           <radialGradient id="breatheGradient" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor={color} stopOpacity="0.15" />
@@ -125,8 +112,8 @@ const BreathingGuide = ({ phase, progress, isActive, color }) => {
           </radialGradient>
         </defs>
         <motion.circle
-          cx="200"
-          cy="200"
+          cx="160"
+          cy="160"
           r={circleSize}
           fill="url(#breatheGradient)"
           stroke={color}
@@ -142,8 +129,8 @@ const BreathingGuide = ({ phase, progress, isActive, color }) => {
   );
 };
 
-const ProgressRing = ({ progress, color, size = 280 }) => {
-  const circumference = 2 * Math.PI * 130;
+const ProgressRing = ({ progress, color, size = 240 }) => {
+  const circumference = 2 * Math.PI * 100;
   const strokeDashoffset = circumference - (progress * circumference);
   
   return (
@@ -151,7 +138,7 @@ const ProgressRing = ({ progress, color, size = 280 }) => {
       <circle
         cx={size/2}
         cy={size/2}
-        r="130"
+        r="100"
         stroke="rgba(255,255,255,0.08)"
         strokeWidth="2"
         fill="transparent"
@@ -159,7 +146,7 @@ const ProgressRing = ({ progress, color, size = 280 }) => {
       <motion.circle
         cx={size/2}
         cy={size/2}
-        r="130"
+        r="100"
         stroke={color}
         strokeWidth="3"
         fill="transparent"
@@ -173,7 +160,7 @@ const ProgressRing = ({ progress, color, size = 280 }) => {
   );
 };
 
-function AdvancedBreathingApp() {
+function Breathing() {
   const [selectedPattern, setSelectedPattern] = useState('calm');
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(-1);
   const [isRunning, setIsRunning] = useState(false);
@@ -184,23 +171,12 @@ function AdvancedBreathingApp() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentAffirmation, setCurrentAffirmation] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [heartRate, setHeartRate] = useState(75);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [completionCelebration, setCompletionCelebration] = useState(null);
   
   const startTimeRef = useRef(null);
   const sessionStartRef = useRef(null);
-  const controls = useAnimation();
   const pattern = patterns[selectedPattern];
-
-  // Heart rate simulation - gradually decreases with breathing
-  useEffect(() => {
-    if (!isRunning) return;
-    
-    const baseRate = 75;
-    const targetRate = 60;
-    const reduction = Math.min(cycle * 1.5, baseRate - targetRate);
-    setHeartRate(Math.max(targetRate, baseRate - reduction));
-  }, [cycle, isRunning]);
 
   // Main breathing loop
   useEffect(() => {
@@ -214,11 +190,11 @@ function AdvancedBreathingApp() {
       if (nextPhaseIndex === 0) {
         setCycle(c => {
           const newCycle = c + 1;
-          // Show affirmation every 4 cycles
-          if (newCycle % 4 === 0) {
+          // Show affirmation every 3 cycles
+          if (newCycle % 3 === 0) {
             const affirmation = calmingAffirmations[Math.floor(Math.random() * calmingAffirmations.length)];
             setCurrentAffirmation(affirmation.text);
-            setTimeout(() => setCurrentAffirmation(''), 4500);
+            setTimeout(() => setCurrentAffirmation(''), 4000);
           }
           return newCycle;
         });
@@ -255,6 +231,17 @@ function AdvancedBreathingApp() {
     }
     return () => clearInterval(interval);
   }, [isRunning]);
+
+  // Celebration notifications
+  useEffect(() => {
+    if (cycle > 0 && cycle % 5 === 0) {
+      setCompletionCelebration(cycle);
+      const timer = setTimeout(() => {
+        setCompletionCelebration(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [cycle]);
 
   const startExercise = useCallback(() => {
     if (currentPhaseIndex === -1) {
@@ -311,7 +298,7 @@ function AdvancedBreathingApp() {
         }`} />
         
         {/* Floating particles */}
-        {[...Array(12)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
           <FloatingParticle 
             key={`particle-${i}`} 
             delay={i * 2} 
@@ -320,53 +307,54 @@ function AdvancedBreathingApp() {
         ))}
       </div>
 
-      <div className="relative z-10 min-h-screen flex flex-col lg:flex-row">
+      <div className="relative z-10 min-h-screen flex flex-col xl:flex-row">
         
         {/* Main Breathing Interface */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
           
           {/* Header */}
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-8 md:mb-16"
             initial={{ y: -30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 1, delay: 0.3 }}
           >
-            <h1 className={`text-5xl lg:text-7xl font-light mb-4 ${
+            <h1 className={`text-4xl md:text-6xl lg:text-7xl font-light mb-4 ${
               isDarkMode 
                 ? 'text-white bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent' 
                 : 'text-slate-700 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'
             }`}>
               Breathe
             </h1>
-            <p className={`text-xl max-w-md mx-auto ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+            <p className={`text-lg md:text-xl max-w-md mx-auto ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
               {pattern.description}
             </p>
           </motion.div>
 
           {/* Main Breathing Circle */}
-          <div className="relative flex items-center justify-center mb-20">
-            
-            {/* Heart Rate Indicator */}
-            <HeartRateVisualizer isActive={isRunning} bpm={heartRate} />
+          <div className="relative flex items-center justify-center mb-12 md:mb-20">
             
             {/* Progress Ring */}
-            <ProgressRing progress={progress} color={pattern.color} />
+            <ProgressRing progress={progress} color={pattern.color} size={window.innerWidth < 768 ? 200 : 240} />
             
             {/* Breathing Guide */}
             <BreathingGuide phase={currentPhase} progress={progress} isActive={isRunning} color={pattern.color} />
             
             {/* Main Circle */}
             <motion.div
-              className={`relative w-64 h-64 lg:w-72 lg:h-72 rounded-full ${
+              className={`relative rounded-full ${
                 isDarkMode 
                   ? 'bg-gradient-to-br from-white/10 to-white/5 border border-white/20' 
                   : 'bg-gradient-to-br from-white/80 to-white/60 border border-white/40'
               } backdrop-blur-xl shadow-2xl`}
+              style={{
+                width: window.innerWidth < 768 ? '200px' : '240px',
+                height: window.innerWidth < 768 ? '200px' : '240px',
+              }}
               animate={{
                 scale: breathingScale,
                 boxShadow: currentPhase ? 
-                  `0 0 ${40 * breathingScale}px ${pattern.color}30` : 
+                  `0 0 ${30 * breathingScale}px ${pattern.color}30` : 
                   isDarkMode ? '0 25px 50px -12px rgba(0, 0, 0, 0.25)' : '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
               }}
               transition={{ 
@@ -375,29 +363,29 @@ function AdvancedBreathingApp() {
               }}
             >
               {/* Inner glow layers */}
-              <div className={`absolute inset-6 rounded-full ${
+              <div className={`absolute inset-4 md:inset-6 rounded-full ${
                 isDarkMode ? 'bg-white/5' : 'bg-white/40'
               } backdrop-blur-lg`} />
-              <div className={`absolute inset-10 rounded-full ${
+              <div className={`absolute inset-6 md:inset-10 rounded-full ${
                 isDarkMode ? 'bg-white/8' : 'bg-white/60'
               }`} />
               
               {/* Content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 md:p-8">
                 <motion.div
                   key={currentPhaseIndex}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="mb-4"
+                  className="mb-2 md:mb-4"
                 >
-                  <div className="text-4xl mb-3">{pattern.icon}</div>
-                  <h3 className={`text-2xl font-medium mb-2 ${
+                  <div className="text-2xl md:text-4xl mb-2 md:mb-3">{pattern.icon}</div>
+                  <h3 className={`text-lg md:text-2xl font-medium mb-1 md:mb-2 ${
                     isDarkMode ? 'text-white' : 'text-slate-700'
                   }`}>
                     {currentPhase ? currentPhase.name.charAt(0).toUpperCase() + currentPhase.name.slice(1) : 'Ready to begin?'}
                   </h3>
                   {currentPhase && (
-                    <div className={`text-lg font-light ${
+                    <div className={`text-sm md:text-lg font-light ${
                       isDarkMode ? 'text-slate-300' : 'text-slate-500'
                     }`}>
                       {Math.ceil(remainingTime / 1000)}s
@@ -416,9 +404,9 @@ function AdvancedBreathingApp() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="text-center mb-16 max-w-lg"
+                className="text-center mb-8 md:mb-16 max-w-lg px-4"
               >
-                <p className={`text-xl leading-relaxed ${
+                <p className={`text-lg md:text-xl leading-relaxed ${
                   isDarkMode ? 'text-slate-200' : 'text-slate-600'
                 }`}>
                   {currentPhase.instruction}
@@ -438,9 +426,9 @@ function AdvancedBreathingApp() {
                   isDarkMode 
                     ? 'bg-white/10 border border-white/20' 
                     : 'bg-white/60 border border-white/40'
-                } backdrop-blur-xl rounded-2xl p-6 max-w-md mx-auto text-center shadow-xl`}
+                } backdrop-blur-xl rounded-2xl p-4 md:p-6 max-w-md mx-auto text-center shadow-xl`}
               >
-                <p className={`text-lg font-light leading-relaxed ${
+                <p className={`text-base md:text-lg font-light leading-relaxed ${
                   isDarkMode ? 'text-white' : 'text-slate-700'
                 }`}>
                   ✨ {currentAffirmation}
@@ -451,14 +439,17 @@ function AdvancedBreathingApp() {
         </div>
 
         {/* Control Panel */}
-        <div className={`w-full lg:w-96 ${
+        <div className={`w-full xl:w-96 ${
           isDarkMode 
-            ? 'bg-black/20 border-l border-white/10' 
-            : 'bg-white/30 border-l border-white/30'
-        } backdrop-blur-xl p-8 flex flex-col justify-between`}>
+            ? 'bg-black/20 xl:border-l border-white/10' 
+            : 'bg-white/30 xl:border-l border-white/30'
+        } backdrop-blur-xl p-4 md:p-8 flex flex-col justify-between`}>
           
           {/* Dark Mode Toggle */}
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className={`text-xl font-medium ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
+              Controls
+            </h2>
             <motion.button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className={`p-3 rounded-full ${
@@ -479,7 +470,7 @@ function AdvancedBreathingApp() {
             {/* Primary Control */}
             <motion.button
               onClick={startExercise}
-              className={`w-full py-6 px-8 rounded-2xl font-medium text-lg shadow-xl transition-all ${
+              className={`w-full py-4 md:py-6 px-6 md:px-8 rounded-2xl font-medium text-lg shadow-xl transition-all ${
                 isRunning 
                   ? 'bg-amber-500 hover:bg-amber-400 text-white' 
                   : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 text-white'
@@ -494,10 +485,10 @@ function AdvancedBreathingApp() {
             </motion.button>
 
             {/* Secondary Controls */}
-            <div className="flex gap-4">
+            <div className="grid grid-cols-3 gap-3 md:gap-4">
               <motion.button
                 onClick={resetExercise}
-                className={`flex-1 py-4 px-6 ${
+                className={`py-3 md:py-4 px-4 md:px-6 ${
                   isDarkMode 
                     ? 'bg-slate-700/70 hover:bg-slate-600/70 text-white' 
                     : 'bg-slate-200/70 hover:bg-slate-300/70 text-slate-700'
@@ -506,21 +497,21 @@ function AdvancedBreathingApp() {
                 whileTap={{ scale: 0.98 }}
                 disabled={currentPhaseIndex === -1}
               >
-                <RotateCcw size={20} className="mx-auto" />
+                <RotateCcw size={18} className="mx-auto" />
               </motion.button>
               
               <motion.button
                 onClick={() => setIsSettingsOpen(true)}
-                className="flex-1 py-4 px-6 bg-purple-500/80 hover:bg-purple-400/80 text-white rounded-xl font-medium transition-all backdrop-blur-sm"
+                className="py-3 md:py-4 px-4 md:px-6 bg-purple-500/80 hover:bg-purple-400/80 text-white rounded-xl font-medium transition-all backdrop-blur-sm"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Settings size={20} className="mx-auto" />
+                <Settings size={18} className="mx-auto" />
               </motion.button>
 
               <motion.button
                 onClick={() => setSoundEnabled(!soundEnabled)}
-                className={`flex-1 py-4 px-6 ${
+                className={`py-3 md:py-4 px-4 md:px-6 ${
                   soundEnabled 
                     ? 'bg-green-500/80 hover:bg-green-400/80' 
                     : isDarkMode ? 'bg-slate-600/70 hover:bg-slate-500/70' : 'bg-slate-300/70 hover:bg-slate-400/70'
@@ -528,7 +519,7 @@ function AdvancedBreathingApp() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {soundEnabled ? <Volume2 size={20} className="mx-auto" /> : <VolumeX size={20} className="mx-auto" />}
+                {soundEnabled ? <Volume2 size={18} className="mx-auto" /> : <VolumeX size={18} className="mx-auto" />}
               </motion.button>
             </div>
 
@@ -538,7 +529,7 @@ function AdvancedBreathingApp() {
                 <motion.button
                   key={key}
                   onClick={() => setSelectedPattern(key)}
-                  className={`p-4 rounded-xl text-left transition-all backdrop-blur-sm ${
+                  className={`p-3 md:p-4 rounded-xl text-left transition-all backdrop-blur-sm ${
                     selectedPattern === key 
                       ? isDarkMode 
                         ? 'bg-white/20 border-2 border-white/30 text-white' 
@@ -550,35 +541,28 @@ function AdvancedBreathingApp() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="text-2xl mb-2">{pat.icon}</div>
-                  <div className="font-medium text-sm">{pat.name}</div>
+                  <div className="text-xl md:text-2xl mb-1 md:mb-2">{pat.icon}</div>
+                  <div className="font-medium text-xs md:text-sm">{pat.name}</div>
                 </motion.button>
               ))}
             </div>
           </div>
 
           {/* Stats */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6 mt-6">
             
-            {/* Vital Stats */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Cycle and Time Stats */}
+            <div className="grid grid-cols-2 gap-4">
               <div className={`${
                 isDarkMode ? 'bg-white/10' : 'bg-white/40'
-              } rounded-xl p-4 text-center backdrop-blur-sm`}>
-                <Heart className="w-6 h-6 text-pink-400 mx-auto mb-2" fill="currentColor" />
-                <div className={`font-bold text-lg ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{heartRate}</div>
-                <div className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>BPM</div>
-              </div>
-              <div className={`${
-                isDarkMode ? 'bg-white/10' : 'bg-white/40'
-              } rounded-xl p-4 text-center backdrop-blur-sm`}>
-                <div className={`font-bold text-lg ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{cycle}</div>
+              } rounded-xl p-3 md:p-4 text-center backdrop-blur-sm`}>
+                <div className={`font-bold text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{cycle}</div>
                 <div className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Cycles</div>
               </div>
               <div className={`${
                 isDarkMode ? 'bg-white/10' : 'bg-white/40'
-              } rounded-xl p-4 text-center backdrop-blur-sm`}>
-                <div className={`font-bold text-lg ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{formatTime(sessionDuration)}</div>
+              } rounded-xl p-3 md:p-4 text-center backdrop-blur-sm`}>
+                <div className={`font-bold text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{formatTime(sessionDuration)}</div>
                 <div className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Time</div>
               </div>
             </div>
@@ -586,13 +570,13 @@ function AdvancedBreathingApp() {
             {/* Progress */}
             <div className={`${
               isDarkMode ? 'bg-white/10' : 'bg-white/40'
-            } rounded-xl p-4 backdrop-blur-sm`}>
+            } rounded-xl p-3 md:p-4 backdrop-blur-sm`}>
               <div className="flex justify-between items-center mb-2">
                 <span className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
                   Serenity Progress
                 </span>
                 <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
-                  {Math.min(100, Math.round((cycle / 12) * 100))}%
+                  {Math.min(100, Math.round((cycle / 10) * 100))}%
                 </span>
               </div>
               <div className={`${
@@ -600,7 +584,7 @@ function AdvancedBreathingApp() {
               } h-2 rounded-full overflow-hidden`}>
                 <motion.div
                   className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full"
-                  animate={{ width: `${Math.min(100, (cycle / 12) * 100)}%` }}
+                  animate={{ width: `${Math.min(100, (cycle / 10) * 100)}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
                 />
               </div>
@@ -627,16 +611,16 @@ function AdvancedBreathingApp() {
                 isDarkMode 
                   ? 'bg-slate-800/95 border border-white/20' 
                   : 'bg-white/95 border border-slate-200/50'
-              } backdrop-blur-xl p-8 rounded-3xl max-w-lg w-full shadow-2xl`}
+              } backdrop-blur-xl p-6 md:p-8 rounded-3xl max-w-lg w-full shadow-2xl`}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center mb-8">
-                <h2 className={`text-2xl font-medium ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+              <div className="flex justify-between items-center mb-6 md:mb-8">
+                <h2 className={`text-xl md:text-2xl font-medium ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
                   Breathing Patterns
                 </h2>
                 <button 
                   onClick={() => setIsSettingsOpen(false)}
-                  className={`transition-colors p-2 ${
+                  className={`transition-colors p-2 text-lg ${
                     isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
@@ -694,16 +678,16 @@ function AdvancedBreathingApp() {
 
       {/* Achievement Celebrations */}
       <AnimatePresence>
-        {cycle > 0 && cycle % 6 === 0 && (
+        {completionCelebration && (
           <motion.div
             initial={{ opacity: 0, x: 300 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
-            className={`fixed top-20 right-6 ${
+            className={`fixed top-4 md:top-20 right-4 md:right-6 ${
               isDarkMode 
                 ? 'bg-emerald-500/20 border border-emerald-400/30' 
                 : 'bg-emerald-100/90 border border-emerald-300/50'
-            } backdrop-blur-md rounded-2xl p-4 z-50 shadow-xl`}
+            } backdrop-blur-md rounded-2xl p-4 z-50 shadow-xl max-w-xs`}
           >
             <div className="flex items-center gap-3">
               <div className="text-2xl">🌟</div>
@@ -716,7 +700,7 @@ function AdvancedBreathingApp() {
                 <div className={`text-sm ${
                   isDarkMode ? 'text-emerald-300' : 'text-emerald-600'
                 }`}>
-                  {cycle} peaceful cycles completed
+                  {completionCelebration} peaceful cycles completed
                 </div>
               </div>
             </div>
@@ -726,12 +710,12 @@ function AdvancedBreathingApp() {
 
       {/* Completion Celebration */}
       <AnimatePresence>
-        {cycle >= 12 && (
+        {cycle >= 10 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
-            className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+            className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none p-4"
           >
             <div className="text-center">
               <motion.div
@@ -744,16 +728,16 @@ function AdvancedBreathingApp() {
                   repeat: Infinity, 
                   ease: "easeInOut" 
                 }}
-                className="text-6xl mb-4"
+                className="text-4xl md:text-6xl mb-4"
               >
                 🧘‍♀️
               </motion.div>
-              <h2 className={`text-4xl font-light mb-2 ${
+              <h2 className={`text-2xl md:text-4xl font-light mb-2 ${
                 isDarkMode ? 'text-white' : 'text-slate-800'
               }`}>
                 Perfect Serenity
               </h2>
-              <p className={`text-xl ${
+              <p className={`text-lg md:text-xl ${
                 isDarkMode ? 'text-slate-200' : 'text-slate-600'
               }`}>
                 You've reached a beautiful state of calm
@@ -763,24 +747,11 @@ function AdvancedBreathingApp() {
         )}
       </AnimatePresence>
 
-      {/* Background Sound Effects */}
-      {soundEnabled && isRunning && (
-        <audio
-          key={`sound-${currentPhaseIndex}`}
-          autoPlay
-          loop
-          volume="0.3"
-          className="hidden"
-        >
-          <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBjiS2O/LeSsFJHfH8N2QQAoUXrTp66hVFA=" />
-        </audio>
-      )}
-
       {/* Sound Toggle in Bottom Corner */}
-      <div className="fixed bottom-6 left-6 z-40">
+      <div className="fixed bottom-4 left-4 z-40">
         <motion.button
           onClick={() => setSoundEnabled(!soundEnabled)}
-          className={`p-4 rounded-full backdrop-blur-md border transition-all shadow-lg ${
+          className={`p-3 md:p-4 rounded-full backdrop-blur-md border transition-all shadow-lg ${
             soundEnabled 
               ? 'bg-blue-500/20 border-blue-400/30 text-blue-300' 
               : isDarkMode 
@@ -790,11 +761,22 @@ function AdvancedBreathingApp() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          {soundEnabled ? <Volume2 size={22} /> : <VolumeX size={22} />}
+          {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
         </motion.button>
       </div>
+
+      {/* Info Toast */}
+      {soundEnabled && (
+        <div className={`fixed bottom-20 left-4 ${
+          isDarkMode 
+            ? 'bg-slate-800/90 border border-white/20 text-white' 
+            : 'bg-white/90 border border-slate-200/50 text-slate-700'
+        } backdrop-blur-md rounded-xl p-3 text-sm shadow-lg z-30`}>
+          🔊 Sound enabled (visual feedback only)
+        </div>
+      )}
     </motion.div>
   );
 }
 
-export default AdvancedBreathingApp;
+export default Breathing;

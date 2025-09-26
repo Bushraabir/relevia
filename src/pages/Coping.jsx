@@ -60,49 +60,49 @@ const techniques = [
     title: 'Deep Breathing',
     description: 'Try the 4-4-4 breathing technique to help calm your nervous system.',
     icon: <MotionFaLungs className="text-5xl text-teal-600" variants={iconVariants} />,
-    path: '/relevia/coping/breathing',
+    path: '/coping/breathing',
   },
   {
     id: 'mindfulness',
     title: 'Mindfulness',
     description: 'You can ground yourself with the 5-4-3-2-1 sensory technique.',
     icon: <MotionFaEye className="text-5xl text-teal-600" variants={iconVariants} />,
-    path: '/relevia/coping/mindfulness',
+    path: '/coping/mindfulness',
   },
   {
     id: 'relaxation',
     title: 'Progressive Relaxation',
     description: 'Let’s release tension together by tensing and relaxing your muscles.',
     icon: <MotionFaHandSparkles className="text-5xl text-teal-600" variants={iconVariants} />,
-    path: '/relevia/coping/relaxation',
+    path: '/coping/relaxation',
   },
   {
     id: 'visualization',
     title: 'Visualization',
     description: 'Picture a peaceful scene to help soothe your mind.',
     icon: <MotionFaImages className="text-5xl text-teal-600" variants={iconVariants} />,
-    path: '/relevia/coping/visualization',
+    path: '/coping/visualization',
   },
   {
     id: 'affirmations',
     title: 'Positive Affirmations',
     description: 'Try repeating calming phrases to help shift your mindset.',
     icon: <MotionFaSmile className="text-5xl text-teal-600" variants={iconVariants} />,
-    path: '/relevia/coping/affirmations',
+    path: '/coping/affirmations',
   },
   {
     id: 'activity',
     title: 'Physical Activity',
     description: 'Engage in some light movement to help release stress.',
     icon: <MotionFaRunning className="text-5xl text-teal-600" variants={iconVariants} />,
-    path: '/relevia/coping/activity',
+    path: '/coping/activity',
   },
   {
     id: 'journaling',
     title: 'Journaling',
     description: 'Writing down your thoughts can help you process your emotions.',
     icon: <MotionFaPen className="text-5xl text-teal-600" variants={iconVariants} />,
-    path: '/relevia/coping/journaling',
+    path: '/coping/journaling',
   },
 ];
 
@@ -317,7 +317,7 @@ function Coping() {
               Need Quick Relief?
             </motion.h2>
             <p className="text-gray-700 text-lg mb-8">Let’s start with guided breathing to help you find peace in seconds.</p>
-            <Link to="/relevia/coping/breathing">
+            <Link to="/coping/breathing">
               <motion.button
                 variants={{
                   initial: { 
@@ -487,8 +487,8 @@ function Coping() {
           </motion.h2>
           <p className="text-gray-700 text-lg mb-10">Access additional resources or reach out for support.</p>
           <div className="flex justify-center gap-8">
-            <Button to="/relevia/about" text="Resources" colorVariants={resourcesColors} />
-            <Button to="/relevia/contact" text="Contact Us" colorVariants={contactColors} />
+            <Button to="/about" text="Resources" colorVariants={resourcesColors} />
+            <Button to="/contact" text="Contact Us" colorVariants={contactColors} />
           </div>
         </motion.div>
       </div>
