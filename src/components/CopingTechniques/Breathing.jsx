@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Pause, Play, RotateCcw, Settings, Volume2, VolumeX, Moon, Sun } from 'lucide-react';
+import Ballpit from '../Balls';
+
 
 const patterns = {
   calm: {
@@ -134,7 +136,7 @@ const ProgressRing = ({ progress, color, size = 240 }) => {
   const strokeDashoffset = circumference - (progress * circumference);
   
   return (
-    <svg className="absolute transform -rotate-90" width={size} height={size}>
+    <svg className="absolute transform -rotate-90 pointer-events-none" width={size} height={size}>
       <circle
         cx={size/2}
         cy={size/2}
@@ -290,11 +292,23 @@ function Breathing() {
       animate={{ opacity: 1 }}
       transition={{ duration: 1.5 }}
     >
-      {/* Enhanced Background */}
-      <div className="absolute inset-0">
+      {/* Interactive Ballpit Background */}
+      <div className="absolute inset-0 z-0">
+        <Ballpit 
+          followCursor={true}
+          colors={[pattern.color, '#ffffff', pattern.color]}
+          count={150}
+          gravity={0.3}
+          friction={0.98}
+          className="opacity-60"
+        />
+      </div>
+
+      {/* Enhanced Background Overlay */}
+      <div className="absolute inset-0 z-[5]">
         <div className={`absolute inset-0 ${isDarkMode 
-          ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/15 via-transparent to-transparent'
-          : 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/50 via-transparent to-transparent'
+          ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent'
+          : 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/60 via-transparent to-transparent'
         }`} />
         
         {/* Floating particles */}
@@ -310,7 +324,7 @@ function Breathing() {
       <div className="relative z-10 min-h-screen flex flex-col xl:flex-row">
         
         {/* Main Breathing Interface */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 pointer-events-none">
           
           {/* Header */}
           <motion.div
@@ -331,7 +345,7 @@ function Breathing() {
             </p>
           </motion.div>
 
-          {/* Main Breathing Circle */}
+          {/* Main Breathing Circle with Glassmorphism */}
           <div className="relative flex items-center justify-center mb-12 md:mb-20">
             
             {/* Progress Ring */}
@@ -340,35 +354,56 @@ function Breathing() {
             {/* Breathing Guide */}
             <BreathingGuide phase={currentPhase} progress={progress} isActive={isRunning} color={pattern.color} />
             
-            {/* Main Circle */}
+            {/* Main Glassmorphism Circle */}
             <motion.div
-              className={`relative rounded-full ${
-                isDarkMode 
-                  ? 'bg-gradient-to-br from-white/10 to-white/5 border border-white/20' 
-                  : 'bg-gradient-to-br from-white/80 to-white/60 border border-white/40'
-              } backdrop-blur-xl shadow-2xl`}
+              className="relative rounded-full backdrop-blur-xl border shadow-2xl"
               style={{
                 width: window.innerWidth < 768 ? '200px' : '240px',
                 height: window.innerWidth < 768 ? '200px' : '240px',
+                background: isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.05)' 
+                  : 'rgba(255, 255, 255, 0.25)',
+                borderColor: isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.1)' 
+                  : 'rgba(255, 255, 255, 0.3)',
+                boxShadow: isDarkMode
+                  ? '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                  : '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
               }}
               animate={{
                 scale: breathingScale,
                 boxShadow: currentPhase ? 
-                  `0 0 ${30 * breathingScale}px ${pattern.color}30` : 
-                  isDarkMode ? '0 25px 50px -12px rgba(0, 0, 0, 0.25)' : '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+                  `0 0 ${40 * breathingScale}px ${pattern.color}40, 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)` : 
+                  isDarkMode 
+                    ? '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                    : '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
               }}
               transition={{ 
                 scale: { duration: currentPhase ? currentPhase.duration / 1000 : 2, ease: "easeInOut" },
                 boxShadow: { duration: 1 }
               }}
             >
-              {/* Inner glow layers */}
-              <div className={`absolute inset-4 md:inset-6 rounded-full ${
-                isDarkMode ? 'bg-white/5' : 'bg-white/40'
-              } backdrop-blur-lg`} />
-              <div className={`absolute inset-6 md:inset-10 rounded-full ${
-                isDarkMode ? 'bg-white/8' : 'bg-white/60'
-              }`} />
+              {/* Inner glassmorphism layers */}
+              <div 
+                className="absolute inset-4 md:inset-6 rounded-full backdrop-blur-lg" 
+                style={{
+                  background: isDarkMode ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.2)',
+                }}
+              />
+              <div 
+                className="absolute inset-6 md:inset-10 rounded-full backdrop-blur-md" 
+                style={{
+                  background: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.3)',
+                }}
+              />
+              
+              {/* Subtle gradient overlay */}
+              <div 
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)`
+                }}
+              />
               
               {/* Content */}
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 md:p-8">
@@ -378,15 +413,15 @@ function Breathing() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="mb-2 md:mb-4"
                 >
-                  <div className="text-2xl md:text-4xl mb-2 md:mb-3">{pattern.icon}</div>
-                  <h3 className={`text-lg md:text-2xl font-medium mb-1 md:mb-2 ${
+                  <div className="text-2xl md:text-4xl mb-2 md:mb-3 filter drop-shadow-md">{pattern.icon}</div>
+                  <h3 className={`text-lg md:text-2xl font-medium mb-1 md:mb-2 filter drop-shadow-sm ${
                     isDarkMode ? 'text-white' : 'text-slate-700'
                   }`}>
                     {currentPhase ? currentPhase.name.charAt(0).toUpperCase() + currentPhase.name.slice(1) : 'Ready to begin?'}
                   </h3>
                   {currentPhase && (
-                    <div className={`text-sm md:text-lg font-light ${
-                      isDarkMode ? 'text-slate-300' : 'text-slate-500'
+                    <div className={`text-sm md:text-lg font-light filter drop-shadow-sm ${
+                      isDarkMode ? 'text-slate-200' : 'text-slate-500'
                     }`}>
                       {Math.ceil(remainingTime / 1000)}s
                     </div>
@@ -406,8 +441,8 @@ function Breathing() {
                 exit={{ opacity: 0, y: -20 }}
                 className="text-center mb-8 md:mb-16 max-w-lg px-4"
               >
-                <p className={`text-lg md:text-xl leading-relaxed ${
-                  isDarkMode ? 'text-slate-200' : 'text-slate-600'
+                <p className={`text-lg md:text-xl leading-relaxed filter drop-shadow-sm ${
+                  isDarkMode ? 'text-slate-100' : 'text-slate-600'
                 }`}>
                   {currentPhase.instruction}
                 </p>
@@ -415,20 +450,27 @@ function Breathing() {
             )}
           </AnimatePresence>
 
-          {/* Affirmations */}
+          {/* Affirmations with Glassmorphism */}
           <AnimatePresence>
             {currentAffirmation && (
               <motion.div
                 initial={{ opacity: 0, y: 30, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -30, scale: 0.9 }}
-                className={`${
-                  isDarkMode 
-                    ? 'bg-white/10 border border-white/20' 
-                    : 'bg-white/60 border border-white/40'
-                } backdrop-blur-xl rounded-2xl p-4 md:p-6 max-w-md mx-auto text-center shadow-xl`}
+                className="backdrop-blur-xl rounded-2xl p-4 md:p-6 max-w-md mx-auto text-center shadow-xl border"
+                style={{
+                  background: isDarkMode 
+                    ? 'rgba(255, 255, 255, 0.08)' 
+                    : 'rgba(255, 255, 255, 0.4)',
+                  borderColor: isDarkMode 
+                    ? 'rgba(255, 255, 255, 0.15)' 
+                    : 'rgba(255, 255, 255, 0.5)',
+                  boxShadow: isDarkMode
+                    ? '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                    : '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
+                }}
               >
-                <p className={`text-base md:text-lg font-light leading-relaxed ${
+                <p className={`text-base md:text-lg font-light leading-relaxed filter drop-shadow-sm ${
                   isDarkMode ? 'text-white' : 'text-slate-700'
                 }`}>
                   ✨ {currentAffirmation}
@@ -438,26 +480,42 @@ function Breathing() {
           </AnimatePresence>
         </div>
 
-        {/* Control Panel */}
-        <div className={`w-full xl:w-96 ${
-          isDarkMode 
-            ? 'bg-black/20 xl:border-l border-white/10' 
-            : 'bg-white/30 xl:border-l border-white/30'
-        } backdrop-blur-xl p-4 md:p-8 flex flex-col justify-between`}>
+        {/* Control Panel - Interactive */}
+        <div 
+          className="w-full xl:w-96 backdrop-blur-xl p-4 md:p-8 flex flex-col justify-between border-l pointer-events-auto"
+          style={{
+            background: isDarkMode 
+              ? 'rgba(0, 0, 0, 0.3)' 
+              : 'rgba(255, 255, 255, 0.25)',
+            borderColor: isDarkMode 
+              ? 'rgba(255, 255, 255, 0.1)' 
+              : 'rgba(255, 255, 255, 0.3)',
+          }}
+        >
           
           {/* Dark Mode Toggle */}
           <div className="flex justify-between items-center mb-6">
-            <h2 className={`text-xl font-medium ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
+            <h2 className={`text-xl font-medium filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
               Controls
             </h2>
             <motion.button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`p-3 rounded-full ${
-                isDarkMode 
-                  ? 'bg-white/10 hover:bg-white/20 text-white' 
-                  : 'bg-slate-700/20 hover:bg-slate-700/30 text-slate-700'
-              } transition-all`}
-              whileHover={{ scale: 1.05 }}
+              className="p-3 rounded-full backdrop-blur-md transition-all border"
+              style={{
+                background: isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.1)' 
+                  : 'rgba(0, 0, 0, 0.1)',
+                borderColor: isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.2)' 
+                  : 'rgba(0, 0, 0, 0.2)',
+                color: isDarkMode ? 'white' : '#374151'
+              }}
+              whileHover={{ 
+                scale: 1.05,
+                background: isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.15)' 
+                  : 'rgba(0, 0, 0, 0.15)'
+              }}
               whileTap={{ scale: 0.95 }}
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
@@ -488,12 +546,22 @@ function Breathing() {
             <div className="grid grid-cols-3 gap-3 md:gap-4">
               <motion.button
                 onClick={resetExercise}
-                className={`py-3 md:py-4 px-4 md:px-6 ${
-                  isDarkMode 
-                    ? 'bg-slate-700/70 hover:bg-slate-600/70 text-white' 
-                    : 'bg-slate-200/70 hover:bg-slate-300/70 text-slate-700'
-                } rounded-xl font-medium transition-all backdrop-blur-sm`}
-                whileHover={{ scale: 1.02 }}
+                className="py-3 md:py-4 px-4 md:px-6 rounded-xl font-medium transition-all backdrop-blur-md border"
+                style={{
+                  background: isDarkMode 
+                    ? 'rgba(71, 85, 105, 0.7)' 
+                    : 'rgba(226, 232, 240, 0.7)',
+                  borderColor: isDarkMode 
+                    ? 'rgba(71, 85, 105, 0.8)' 
+                    : 'rgba(226, 232, 240, 0.8)',
+                  color: isDarkMode ? 'white' : '#374151'
+                }}
+                whileHover={{ 
+                  scale: 1.02,
+                  background: isDarkMode 
+                    ? 'rgba(71, 85, 105, 0.8)' 
+                    : 'rgba(226, 232, 240, 0.8)'
+                }}
                 whileTap={{ scale: 0.98 }}
                 disabled={currentPhaseIndex === -1}
               >
@@ -502,8 +570,15 @@ function Breathing() {
               
               <motion.button
                 onClick={() => setIsSettingsOpen(true)}
-                className="py-3 md:py-4 px-4 md:px-6 bg-purple-500/80 hover:bg-purple-400/80 text-white rounded-xl font-medium transition-all backdrop-blur-sm"
-                whileHover={{ scale: 1.02 }}
+                className="py-3 md:py-4 px-4 md:px-6 rounded-xl font-medium transition-all backdrop-blur-md"
+                style={{
+                  background: 'rgba(168, 85, 247, 0.8)',
+                  color: 'white'
+                }}
+                whileHover={{ 
+                  scale: 1.02,
+                  background: 'rgba(168, 85, 247, 0.9)'
+                }}
                 whileTap={{ scale: 0.98 }}
               >
                 <Settings size={18} className="mx-auto" />
@@ -511,12 +586,23 @@ function Breathing() {
 
               <motion.button
                 onClick={() => setSoundEnabled(!soundEnabled)}
-                className={`py-3 md:py-4 px-4 md:px-6 ${
-                  soundEnabled 
-                    ? 'bg-green-500/80 hover:bg-green-400/80' 
-                    : isDarkMode ? 'bg-slate-600/70 hover:bg-slate-500/70' : 'bg-slate-300/70 hover:bg-slate-400/70'
-                } text-white rounded-xl font-medium transition-all backdrop-blur-sm`}
-                whileHover={{ scale: 1.02 }}
+                className="py-3 md:py-4 px-4 md:px-6 rounded-xl font-medium transition-all backdrop-blur-md"
+                style={{
+                  background: soundEnabled 
+                    ? 'rgba(34, 197, 94, 0.8)' 
+                    : isDarkMode 
+                      ? 'rgba(71, 85, 105, 0.7)' 
+                      : 'rgba(148, 163, 184, 0.7)',
+                  color: 'white'
+                }}
+                whileHover={{ 
+                  scale: 1.02,
+                  background: soundEnabled 
+                    ? 'rgba(34, 197, 94, 0.9)' 
+                    : isDarkMode 
+                      ? 'rgba(71, 85, 105, 0.8)' 
+                      : 'rgba(148, 163, 184, 0.8)'
+                }}
                 whileTap={{ scale: 0.98 }}
               >
                 {soundEnabled ? <Volume2 size={18} className="mx-auto" /> : <VolumeX size={18} className="mx-auto" />}
@@ -529,16 +615,32 @@ function Breathing() {
                 <motion.button
                   key={key}
                   onClick={() => setSelectedPattern(key)}
-                  className={`p-3 md:p-4 rounded-xl text-left transition-all backdrop-blur-sm ${
-                    selectedPattern === key 
+                  className="p-3 md:p-4 rounded-xl text-left transition-all backdrop-blur-md border"
+                  style={{
+                    background: selectedPattern === key 
                       ? isDarkMode 
-                        ? 'bg-white/20 border-2 border-white/30 text-white' 
-                        : 'bg-white/60 border-2 border-blue-300/50 text-slate-700'
+                        ? 'rgba(255, 255, 255, 0.15)' 
+                        : 'rgba(255, 255, 255, 0.6)'
                       : isDarkMode 
-                        ? 'bg-white/5 border-2 border-transparent text-slate-300 hover:bg-white/10' 
-                        : 'bg-white/20 border-2 border-transparent text-slate-600 hover:bg-white/40'
-                  }`}
-                  whileHover={{ scale: 1.02 }}
+                        ? 'rgba(255, 255, 255, 0.05)' 
+                        : 'rgba(255, 255, 255, 0.2)',
+                    borderColor: selectedPattern === key 
+                      ? isDarkMode 
+                        ? 'rgba(255, 255, 255, 0.3)' 
+                        : 'rgba(59, 130, 246, 0.5)'
+                      : 'transparent',
+                    color: isDarkMode ? 'white' : selectedPattern === key ? '#1e293b' : '#64748b'
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    background: selectedPattern === key 
+                      ? isDarkMode 
+                        ? 'rgba(255, 255, 255, 0.2)' 
+                        : 'rgba(255, 255, 255, 0.7)'
+                      : isDarkMode 
+                        ? 'rgba(255, 255, 255, 0.1)' 
+                        : 'rgba(255, 255, 255, 0.4)'
+                  }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="text-xl md:text-2xl mb-1 md:mb-2">{pat.icon}</div>
@@ -553,35 +655,50 @@ function Breathing() {
             
             {/* Cycle and Time Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <div className={`${
-                isDarkMode ? 'bg-white/10' : 'bg-white/40'
-              } rounded-xl p-3 md:p-4 text-center backdrop-blur-sm`}>
-                <div className={`font-bold text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{cycle}</div>
-                <div className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Cycles</div>
+              <div 
+                className="rounded-xl p-3 md:p-4 text-center backdrop-blur-md border"
+                style={{
+                  background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
+                }}
+              >
+                <div className={`font-bold text-lg md:text-xl filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{cycle}</div>
+                <div className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>Cycles</div>
               </div>
-              <div className={`${
-                isDarkMode ? 'bg-white/10' : 'bg-white/40'
-              } rounded-xl p-3 md:p-4 text-center backdrop-blur-sm`}>
-                <div className={`font-bold text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{formatTime(sessionDuration)}</div>
-                <div className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Time</div>
+              <div 
+                className="rounded-xl p-3 md:p-4 text-center backdrop-blur-md border"
+                style={{
+                  background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
+                }}
+              >
+                <div className={`font-bold text-lg md:text-xl filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{formatTime(sessionDuration)}</div>
+                <div className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>Time</div>
               </div>
             </div>
 
             {/* Progress */}
-            <div className={`${
-              isDarkMode ? 'bg-white/10' : 'bg-white/40'
-            } rounded-xl p-3 md:p-4 backdrop-blur-sm`}>
+            <div 
+              className="rounded-xl p-3 md:p-4 backdrop-blur-md border"
+              style={{
+                background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
+              }}
+            >
               <div className="flex justify-between items-center mb-2">
-                <span className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                <span className={`text-sm ${isDarkMode ? 'text-slate-200' : 'text-slate-600'}`}>
                   Serenity Progress
                 </span>
-                <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
+                <span className={`font-medium filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
                   {Math.min(100, Math.round((cycle / 10) * 100))}%
                 </span>
               </div>
-              <div className={`${
-                isDarkMode ? 'bg-slate-700/50' : 'bg-slate-300/50'
-              } h-2 rounded-full overflow-hidden`}>
+              <div 
+                className="h-2 rounded-full overflow-hidden"
+                style={{
+                  background: isDarkMode ? 'rgba(71, 85, 105, 0.5)' : 'rgba(148, 163, 184, 0.5)'
+                }}
+              >
                 <motion.div
                   className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full"
                   animate={{ width: `${Math.min(100, (cycle / 10) * 100)}%` }}
@@ -593,7 +710,7 @@ function Breathing() {
         </div>
       </div>
 
-      {/* Settings Modal */}
+      {/* Settings Modal with Glassmorphism */}
       <AnimatePresence>
         {isSettingsOpen && (
           <motion.div
@@ -607,15 +724,19 @@ function Breathing() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className={`${
-                isDarkMode 
-                  ? 'bg-slate-800/95 border border-white/20' 
-                  : 'bg-white/95 border border-slate-200/50'
-              } backdrop-blur-xl p-6 md:p-8 rounded-3xl max-w-lg w-full shadow-2xl`}
+              className="backdrop-blur-xl p-6 md:p-8 rounded-3xl max-w-lg w-full shadow-2xl border"
+              style={{
+                background: isDarkMode 
+                  ? 'rgba(30, 41, 59, 0.95)' 
+                  : 'rgba(255, 255, 255, 0.95)',
+                borderColor: isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.2)' 
+                  : 'rgba(226, 232, 240, 0.5)'
+              }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-6 md:mb-8">
-                <h2 className={`text-xl md:text-2xl font-medium ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                <h2 className={`text-xl md:text-2xl font-medium filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
                   Breathing Patterns
                 </h2>
                 <button 
@@ -630,7 +751,7 @@ function Breathing() {
               
               <div className="space-y-6">
                 <div>
-                  <label className={`block font-medium mb-4 ${
+                  <label className={`block font-medium mb-4 filter drop-shadow-sm ${
                     isDarkMode ? 'text-white' : 'text-slate-800'
                   }`}>
                     Choose Your Journey
@@ -640,15 +761,26 @@ function Breathing() {
                       <button
                         key={key}
                         onClick={() => setSelectedPattern(key)}
-                        className={`w-full p-4 rounded-xl text-left transition-all backdrop-blur-sm ${
-                          selectedPattern === key 
+                        className="w-full p-4 rounded-xl text-left transition-all backdrop-blur-md border"
+                        style={{
+                          background: selectedPattern === key 
                             ? isDarkMode 
-                              ? 'bg-white/20 border-2 border-white/30 text-white' 
-                              : 'bg-blue-100/80 border-2 border-blue-300/50 text-slate-800'
+                              ? 'rgba(255, 255, 255, 0.15)' 
+                              : 'rgba(59, 130, 246, 0.1)'
                             : isDarkMode 
-                              ? 'bg-white/5 border-2 border-white/10 text-slate-300 hover:bg-white/10' 
-                              : 'bg-slate-50/50 border-2 border-slate-200/50 text-slate-600 hover:bg-slate-100/70'
-                        }`}
+                              ? 'rgba(255, 255, 255, 0.05)' 
+                              : 'rgba(241, 245, 249, 0.5)',
+                          borderColor: selectedPattern === key 
+                            ? isDarkMode 
+                              ? 'rgba(255, 255, 255, 0.3)' 
+                              : 'rgba(59, 130, 246, 0.5)'
+                            : isDarkMode 
+                              ? 'rgba(255, 255, 255, 0.1)' 
+                              : 'rgba(226, 232, 240, 0.5)',
+                          color: isDarkMode 
+                            ? selectedPattern === key ? 'white' : '#cbd5e1'
+                            : selectedPattern === key ? '#1e293b' : '#64748b'
+                        }}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{pat.icon}</span>
@@ -683,11 +815,15 @@ function Breathing() {
             initial={{ opacity: 0, x: 300 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
-            className={`fixed top-4 md:top-20 right-4 md:right-6 ${
-              isDarkMode 
-                ? 'bg-emerald-500/20 border border-emerald-400/30' 
-                : 'bg-emerald-100/90 border border-emerald-300/50'
-            } backdrop-blur-md rounded-2xl p-4 z-50 shadow-xl max-w-xs`}
+            className="fixed top-4 md:top-20 right-4 md:right-6 backdrop-blur-md rounded-2xl p-4 z-50 shadow-xl max-w-xs border"
+            style={{
+              background: isDarkMode 
+                ? 'rgba(16, 185, 129, 0.2)' 
+                : 'rgba(16, 185, 129, 0.1)',
+              borderColor: isDarkMode 
+                ? 'rgba(52, 211, 153, 0.3)' 
+                : 'rgba(52, 211, 153, 0.5)'
+            }}
           >
             <div className="flex items-center gap-3">
               <div className="text-2xl">🌟</div>
@@ -732,12 +868,12 @@ function Breathing() {
               >
                 🧘‍♀️
               </motion.div>
-              <h2 className={`text-2xl md:text-4xl font-light mb-2 ${
+              <h2 className={`text-2xl md:text-4xl font-light mb-2 filter drop-shadow-md ${
                 isDarkMode ? 'text-white' : 'text-slate-800'
               }`}>
                 Perfect Serenity
               </h2>
-              <p className={`text-lg md:text-xl ${
+              <p className={`text-lg md:text-xl filter drop-shadow-sm ${
                 isDarkMode ? 'text-slate-200' : 'text-slate-600'
               }`}>
                 You've reached a beautiful state of calm
@@ -751,14 +887,28 @@ function Breathing() {
       <div className="fixed bottom-4 left-4 z-40">
         <motion.button
           onClick={() => setSoundEnabled(!soundEnabled)}
-          className={`p-3 md:p-4 rounded-full backdrop-blur-md border transition-all shadow-lg ${
-            soundEnabled 
-              ? 'bg-blue-500/20 border-blue-400/30 text-blue-300' 
+          className="p-3 md:p-4 rounded-full backdrop-blur-md border transition-all shadow-lg"
+          style={{
+            background: soundEnabled 
+              ? 'rgba(59, 130, 246, 0.2)' 
               : isDarkMode 
-                ? 'bg-white/10 border-white/20 text-white/60 hover:text-white/80' 
-                : 'bg-white/30 border-white/40 text-slate-600 hover:text-slate-800'
-          }`}
-          whileHover={{ scale: 1.05 }}
+                ? 'rgba(255, 255, 255, 0.1)' 
+                : 'rgba(255, 255, 255, 0.3)',
+            borderColor: soundEnabled 
+              ? 'rgba(59, 130, 246, 0.3)' 
+              : isDarkMode 
+                ? 'rgba(255, 255, 255, 0.2)' 
+                : 'rgba(255, 255, 255, 0.4)',
+            color: soundEnabled 
+              ? '#60a5fa' 
+              : isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#64748b'
+          }}
+          whileHover={{ 
+            scale: 1.05,
+            color: soundEnabled 
+              ? '#3b82f6' 
+              : isDarkMode ? 'rgba(255, 255, 255, 0.8)' : '#1e293b'
+          }}
           whileTap={{ scale: 0.95 }}
         >
           {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
@@ -767,11 +917,18 @@ function Breathing() {
 
       {/* Info Toast */}
       {soundEnabled && (
-        <div className={`fixed bottom-20 left-4 ${
-          isDarkMode 
-            ? 'bg-slate-800/90 border border-white/20 text-white' 
-            : 'bg-white/90 border border-slate-200/50 text-slate-700'
-        } backdrop-blur-md rounded-xl p-3 text-sm shadow-lg z-30`}>
+        <div 
+          className="fixed bottom-20 left-4 backdrop-blur-md rounded-xl p-3 text-sm shadow-lg z-30 border"
+          style={{
+            background: isDarkMode 
+              ? 'rgba(30, 41, 59, 0.9)' 
+              : 'rgba(255, 255, 255, 0.9)',
+            borderColor: isDarkMode 
+              ? 'rgba(255, 255, 255, 0.2)' 
+              : 'rgba(226, 232, 240, 0.5)',
+            color: isDarkMode ? 'white' : '#374151'
+          }}
+        >
           🔊 Sound enabled (visual feedback only)
         </div>
       )}
