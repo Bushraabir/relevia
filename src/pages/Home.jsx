@@ -2,170 +2,11 @@ import { Link } from 'react-router-dom';
 import React from 'react';
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { animated, useSpring as useReactSpring } from '@react-spring/web';
 import Lottie from 'lottie-react';
 import heartAnimation from '../assets/animation/heart.json';
 import Cursor from '../components/cursor';
 import ChatbotWidget from '../components/Chatbot';
-
-// Fixed morphing background - removed problematic spring animations
-const MorphingBackground = () => {
-  const [phase, setPhase] = useState(0);
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPhase(prev => (prev + 1) % 2);
-    }, 12000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const morphShapes = [
-    'polygon(0% 0%, 100% 0%, 100% 75%, 75% 100%, 25% 100%, 0% 80%)',
-    'polygon(20% 0%, 100% 20%, 80% 100%, 0% 80%, 0% 40%, 40% 0%)'
-  ];
-
-  return (
-    <div className="absolute inset-0 overflow-hidden opacity-60">
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-primary-100/30 via-secondary-100/20 to-accent-100/15"
-        animate={{
-          clipPath: morphShapes[phase]
-        }}
-        transition={{ 
-          duration: 12, 
-          ease: "easeInOut",
-          type: "tween" // Fixed: Use tween instead of spring for complex animations
-        }}
-      />
-      
-      <motion.div
-        className="absolute inset-0 bg-gradient-radial from-white/5 via-transparent to-primary-50/10"
-        animate={{
-          scale: [1, 1.05, 1],
-          opacity: [0.2, 0.4, 0.2]
-        }}
-        transition={{ 
-          duration: 8, 
-          repeat: Infinity, 
-          ease: "easeInOut",
-          type: "tween"
-        }}
-      />
-    </div>
-  );
-};
-
-// Fixed floating orbs with proper debouncing
-const FloatingOrbs = () => {
-  const [windowSize, setWindowSize] = useState(() => ({
-    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
-    height: typeof window !== 'undefined' ? window.innerHeight : 800
-  }));
-  
-  // Proper debounce implementation
-  const debounce = useCallback((func, wait) => {
-    let timeout;
-    return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func.apply(this, args), wait);
-    };
-  }, []);
-
-  useEffect(() => {
-    const updateSize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-    
-    const debouncedResize = debounce(updateSize, 250);
-    window.addEventListener('resize', debouncedResize);
-    
-    return () => {
-      window.removeEventListener('resize', debouncedResize);
-    };
-  }, [debounce]);
-
-  const orbs = useMemo(() => [
-    { id: 1, x: '10%', y: '70%', size: windowSize.width < 768 ? 20 : 30, color: 'from-primary-200/40 to-primary-400/20', delay: 0, speed: 15 },
-    { id: 2, x: '85%', y: '60%', size: windowSize.width < 768 ? 24 : 36, color: 'from-secondary-200/40 to-secondary-500/20', delay: 2, speed: 18 },
-    { id: 3, x: '15%', y: '15%', size: windowSize.width < 768 ? 16 : 24, color: 'from-accent-200/40 to-accent-400/20', delay: 4, speed: 20 },
-    { id: 4, x: '80%', y: '20%', size: windowSize.width < 768 ? 22 : 32, color: 'from-primary-300/30 to-secondary-300/30', delay: 1, speed: 16 },
-  ], [windowSize.width]);
-  
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {orbs.map((orb) => (
-        <motion.div
-          key={orb.id}
-          className={`absolute rounded-full bg-gradient-radial ${orb.color} blur-lg shadow-lg backdrop-blur-sm border border-white/10`}
-          style={{ 
-            width: orb.size, 
-            height: orb.size, 
-            left: orb.x, 
-            top: orb.y,
-          }}
-          animate={{ 
-            y: [0, -15, 0], 
-            x: [0, 10, 0], 
-            opacity: [0.4, 0.8, 0.4],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{ 
-            duration: orb.speed, 
-            repeat: Infinity, 
-            delay: orb.delay, 
-            ease: "easeInOut",
-            type: "tween"
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
-// Fixed particle field with simple animations
-const ParticleField = () => {
-  const particles = useMemo(() => {
-    const particleCount = 12; // Reduced for performance
-    return Array.from({ length: particleCount }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 3 + 1.5,
-      opacity: Math.random() * 0.3 + 0.1,
-      duration: Math.random() * 20 + 15,
-      delay: Math.random() * 5,
-      color: ['primary-300', 'secondary-300', 'accent-300'][Math.floor(Math.random() * 3)],
-    }));
-  }, []);
-
-  return (
-    <div className="absolute inset-0 pointer-events-none">
-      {particles.map((particle) => (
-        <motion.div
-          key={particle.id}
-          className={`absolute bg-${particle.color}/20 rounded-full blur-sm`}
-          style={{
-            width: particle.size,
-            height: particle.size,
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-          }}
-          animate={{
-            y: [0, -30, 0],
-            opacity: [particle.opacity, particle.opacity * 2, particle.opacity]
-          }}
-          transition={{
-            duration: particle.duration,
-            repeat: Infinity,
-            delay: particle.delay,
-            ease: "easeInOut",
-            type: "tween"
-          }}
-        />
-      ))}
-    </div>
-  );
-};
+import SplashCursor from '../components/cursor';
 
 // Fixed scroll indicator
 const ScrollIndicator = ({ scrollY }) => {
@@ -177,7 +18,7 @@ const ScrollIndicator = ({ scrollY }) => {
       style={{ opacity }}
     >
       <motion.div
-        className="flex flex-col items-center text-neutral-600 bg-white/15 backdrop-blur-lg border border-white/20 rounded-full px-4 py-3 shadow-lg"
+        className="flex flex-col items-center text-neutral-600 bg-white/90 backdrop-blur-lg border border-neutral-200 rounded-full px-4 py-3 shadow-lg"
         animate={{ y: [0, 6, 0] }}
         transition={{ 
           duration: 2.5, 
@@ -212,7 +53,6 @@ function Home() {
   // Optimized scroll transforms
   const heroY = useTransform(scrollY, [0, 800], [0, -200]);
   const heroOpacity = useTransform(scrollY, [0, 600], [1, 0.8]);
-  const backgroundY = useTransform(scrollY, [0, 1000], [0, -300]);
   
   const ref = useRef(null);
   const mouseX = useMotionValue(0);
@@ -253,20 +93,6 @@ function Home() {
       window.removeEventListener('mousemove', debouncedMouseMove);
     };
   }, [updateMousePosition, debounce]);
-
-  // Fixed gradient animation - removed conflicting properties
-  const gradientAnimation = useReactSpring({
-    from: { 
-      backgroundPosition: '0% 50%'
-    },
-    to: async (next) => {
-      while (true) {
-        await next({ backgroundPosition: '100% 50%' });
-        await next({ backgroundPosition: '0% 50%' });
-      }
-    },
-    config: { duration: 20000 },
-  });
 
   // Fixed animation variants - removed complex spring animations
   const heroVariants = {
@@ -375,34 +201,8 @@ function Home() {
         <p>Discover your sanctuary for mental wellness at Relevia. Expert-guided anxiety relief, mindfulness practices, and compassionate support for your healing journey.</p>
       </div>
 
-      <div className="min-h-screen relative overflow-hidden">
-        {/* Fixed background system - removed conflicting properties */}
-        <animated.div
-          style={{ 
-            backgroundImage: `
-              radial-gradient(ellipse at 25% 25%, rgba(14, 165, 233, 0.12) 0%, transparent 50%),
-              radial-gradient(ellipse at 75% 75%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
-              conic-gradient(from 180deg at 50% 50%, #F9FAFB 0deg, #E0F2FE 90deg, #D1FAE5 180deg, #EDE9FE 270deg, #F9FAFB 360deg)
-            `,
-            backgroundSize: '400% 400%',
-            ...gradientAnimation
-          }}
-          className="absolute inset-0 z-0"
-        />
-        
-        <MorphingBackground />
-        
-        <motion.div 
-          style={{ y: backgroundY }} 
-          className="absolute inset-0 z-5"
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-white/10" />
-        </motion.div>
-        
-        <FloatingOrbs />
-        <ParticleField />
-
-        <Cursor />
+      <div className="min-h-screen relative overflow-hidden bg-white">
+        <SplashCursor className="opacity-60 " />
         <ChatbotWidget />
 
         {/* Hero Section */}
@@ -422,9 +222,6 @@ function Home() {
               y: springY
             }}
           >
-            <div className="absolute inset-0 bg-gradient-radial from-primary-300/30 via-secondary-300/20 to-transparent rounded-full blur-2xl scale-150 animate-gentlePulse" />
-            <div className="absolute inset-4 bg-gradient-radial from-white/20 to-transparent rounded-full blur-lg animate-gentlePulse" style={{ animationDuration: '4s' }} />
-            
             <motion.div
               animate={{ 
                 scale: [1, 1.05, 1], 
@@ -544,22 +341,9 @@ function Home() {
             initial={{ opacity: 0, scale: 0.95, y: 40 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 2, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white/30 backdrop-blur-2xl border border-white/40 rounded-2xl p-8 sm:p-12 md:p-16 shadow-xl max-w-5xl mx-auto my-32 relative overflow-hidden"
-            style={{
-              boxShadow: `
-                0 20px 40px -12px rgba(0, 0, 0, 0.1),
-                0 0 0 1px rgba(255, 255, 255, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2)
-              `
-            }}
+            className="bg-white/80 backdrop-blur-sm border border-neutral-200 rounded-2xl p-8 sm:p-12 md:p-16 shadow-lg max-w-5xl mx-auto my-32 relative overflow-hidden"
             viewport={{ once: true, amount: 0.1 }}
           >
-            {/* Background decorations */}
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-8 left-8 w-32 h-32 bg-gradient-to-br from-primary-300/50 to-secondary-300/30 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '6s' }} />
-              <div className="absolute bottom-8 right-8 w-24 h-24 bg-gradient-to-br from-accent-300/40 to-primary-300/30 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s', animationDuration: '8s' }} />
-            </div>
-
             {/* Letter content */}
             <div className="relative z-10 space-y-8">
               <motion.h2
@@ -747,16 +531,8 @@ function Home() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.2 }}
                   className={`
-                    bg-white/40 backdrop-blur-2xl border border-white/50 rounded-2xl p-8 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-700 group relative overflow-hidden
-                    ${item.shadow}
+                    bg-white/80 backdrop-blur-sm border border-neutral-200 rounded-2xl p-8 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-700 group relative overflow-hidden
                   `}
-                  style={{ 
-                    boxShadow: `
-                      0 16px 32px -8px rgba(0, 0, 0, 0.08),
-                      0 0 0 1px rgba(255, 255, 255, 0.1),
-                      inset 0 1px 0 rgba(255, 255, 255, 0.15)
-                    `
-                  }}
                 >
                   {/* Background gradient overlay */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-30 transition-all duration-700 rounded-2xl`} />
@@ -817,41 +593,6 @@ function Home() {
         {/* Scroll indicator */}
         <ScrollIndicator scrollY={scrollY} />
 
-        {/* Fixed floating decorations */}
-        <motion.div 
-          className="fixed bottom-0 left-0 w-full h-32 pointer-events-none overflow-hidden z-5" 
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          transition={{ delay: 3, duration: 2 }}
-          aria-hidden="true"
-        >
-          {[...Array(8)].map((_, i) => (
-            <motion.div 
-              key={i}
-              className={`absolute w-2 h-2 rounded-full backdrop-blur-sm shadow-sm border border-white/20 ${
-                ['bg-gradient-to-br from-primary-300/60 to-primary-500/40', 
-                 'bg-gradient-to-br from-secondary-300/60 to-secondary-500/40', 
-                 'bg-gradient-to-br from-accent-300/60 to-accent-500/40'][i % 3]
-              }`}
-              style={{
-                left: `${10 + i * 10}%`,
-                bottom: `${Math.random() * 20 + 10}px`
-              }}
-              animate={{ 
-                y: [0, -20, 0], 
-                opacity: [0.4, 0.8, 0.4]
-              }} 
-              transition={{ 
-                duration: 8 + Math.random() * 4, 
-                repeat: Infinity, 
-                ease: "easeInOut",
-                delay: i * 0.3,
-                type: "tween"
-              }} 
-            />
-          ))}
-        </motion.div>
-
         {/* Fixed help button */}
         <motion.div
           className="fixed bottom-6 right-6 z-50"
@@ -897,34 +638,6 @@ function Home() {
           Skip to main content
         </a>
 
-        {/* Fixed ambient background elements */}
-        <div className="fixed inset-0 pointer-events-none z-1" aria-hidden="true">
-          {[...Array(3)].map((_, i) => (
-            <motion.div
-              key={i}
-              className={`absolute w-64 h-64 rounded-full opacity-3 blur-2xl ${
-                ['bg-primary-200', 'bg-secondary-200', 'bg-accent-200'][i]
-              }`}
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                x: [0, Math.random() * 100 - 50, 0],
-                y: [0, Math.random() * 100 - 50, 0],
-                opacity: [0.03, 0.08, 0.03],
-              }}
-              transition={{
-                duration: 15 + Math.random() * 10,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 3,
-                type: "tween"
-              }}
-            />
-          ))}
-        </div>
-
         {/* SEO structured data */}
         <script type="application/ld+json">
           {JSON.stringify({
@@ -947,6 +660,8 @@ function Home() {
             }
           })}
         </script>
+
+
 
         {/* Meta tags for SEO */}
         <div className="sr-only">
