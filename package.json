@@ -33,6 +33,7 @@
     "react-router-dom": "^7.5.0",
     "react-spring": "^9.7.5",
     "react-swipeable": "^7.0.2",
+    "recharts": "^3.2.1",
     "three": "^0.180.0",
     "tsparticles": "^3.8.1"
   },

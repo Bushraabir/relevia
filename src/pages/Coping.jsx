@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion';
-import { useState } from 'react';
+
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaLungs, FaEye, FaHandSparkles, FaImages, FaSmile, FaRunning, FaPen } from 'react-icons/fa';
 import { Player } from '@lottiefiles/react-lottie-player';
@@ -44,7 +45,7 @@ const iconVariants = {
   },
 };
 
-const blobColors = ['bg-blue-200/30', 'bg-purple-200/30', 'bg-teal-200/30', 'bg-green-200/30'];
+const blobColors = ['bg-primary-200/30', 'bg-accent-200/30', 'bg-secondary-200/30', 'bg-neutral-200/30'];
 
 const MotionFaLungs = motion(FaLungs);
 const MotionFaEye = motion(FaEye);
@@ -59,49 +60,49 @@ const techniques = [
     id: 'breathing',
     title: 'Deep Breathing',
     description: 'Try the 4-4-4 breathing technique to help calm your nervous system.',
-    icon: <MotionFaLungs className="text-5xl text-teal-600" variants={iconVariants} />,
+    icon: <MotionFaLungs className="text-5xl text-secondary-600" variants={iconVariants} />,
     path: '/coping/breathing',
   },
   {
     id: 'mindfulness',
     title: 'Mindfulness',
     description: 'You can ground yourself with the 5-4-3-2-1 sensory technique.',
-    icon: <MotionFaEye className="text-5xl text-teal-600" variants={iconVariants} />,
+    icon: <MotionFaEye className="text-5xl text-secondary-600" variants={iconVariants} />,
     path: '/coping/mindfulness',
   },
   {
     id: 'relaxation',
     title: 'Progressive Relaxation',
     description: 'Let’s release tension together by tensing and relaxing your muscles.',
-    icon: <MotionFaHandSparkles className="text-5xl text-teal-600" variants={iconVariants} />,
+    icon: <MotionFaHandSparkles className="text-5xl text-secondary-600" variants={iconVariants} />,
     path: '/coping/relaxation',
   },
   {
     id: 'visualization',
     title: 'Visualization',
     description: 'Picture a peaceful scene to help soothe your mind.',
-    icon: <MotionFaImages className="text-5xl text-teal-600" variants={iconVariants} />,
+    icon: <MotionFaImages className="text-5xl text-secondary-600" variants={iconVariants} />,
     path: '/coping/visualization',
   },
   {
     id: 'affirmations',
     title: 'Positive Affirmations',
     description: 'Try repeating calming phrases to help shift your mindset.',
-    icon: <MotionFaSmile className="text-5xl text-teal-600" variants={iconVariants} />,
+    icon: <MotionFaSmile className="text-5xl text-secondary-600" variants={iconVariants} />,
     path: '/coping/affirmations',
   },
   {
     id: 'activity',
     title: 'Physical Activity',
     description: 'Engage in some light movement to help release stress.',
-    icon: <MotionFaRunning className="text-5xl text-teal-600" variants={iconVariants} />,
+    icon: <MotionFaRunning className="text-5xl text-secondary-600" variants={iconVariants} />,
     path: '/coping/activity',
   },
   {
     id: 'journaling',
     title: 'Journaling',
     description: 'Writing down your thoughts can help you process your emotions.',
-    icon: <MotionFaPen className="text-5xl text-teal-600" variants={iconVariants} />,
+    icon: <MotionFaPen className="text-5xl text-secondary-600" variants={iconVariants} />,
     path: '/coping/journaling',
   },
 ];
@@ -225,6 +226,14 @@ const Button = ({ to, text, colorVariants }) => {
 
 function Coping() {
   const [activeTechnique, setActiveTechnique] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const resourcesColors = {
     bg: '#0d9488',
@@ -249,7 +258,7 @@ function Coping() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-purple-100 pt-28 pb-20 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-100 pt-28 pb-20 relative overflow-hidden">
       {blobColors.map((color, index) => (
         <motion.div
           key={index}
@@ -275,7 +284,7 @@ function Coping() {
           initial={{ opacity: 0, y: -40, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1.2, ease: 'easeOut' }}
-          className="text-4xl sm:text-6xl font-bold text-gray-900 text-center mb-8 tracking-tight"
+          className="text-4xl sm:text-6xl font-heading font-bold text-neutral-900 text-center mb-8 tracking-tight"
         >
           Coping Techniques
         </motion.h1>
@@ -283,7 +292,7 @@ function Coping() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.4, delay: 0.4, ease: 'easeOut' }}
-          className="text-gray-700 text-lg sm:text-xl text-center max-w-2xl mx-auto mb-16 leading-relaxed"
+          className="text-neutral-700 text-lg sm:text-xl text-center max-w-2xl mx-auto mb-16 leading-relaxed font-body"
         >
           Explore these gentle techniques to help you find calm and feel empowered when things feel overwhelming.
         </motion.p>
@@ -300,7 +309,7 @@ function Coping() {
               autoplay
               loop
               src={copingAnimation}
-              style={{ height: '600px', width: '600px', maxWidth: '100%' }}
+              style={{ height: isMobile ? '300px' : '600px', width: isMobile ? '300px' : '600px', maxWidth: '100%' }}
             />
           </motion.div>
           <motion.div
@@ -312,11 +321,11 @@ function Coping() {
             <motion.h2
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-6"
+              className="text-3xl sm:text-4xl font-heading font-semibold text-neutral-900 mb-6"
             >
               Need Quick Relief?
             </motion.h2>
-            <p className="text-gray-700 text-lg mb-8">Let’s start with guided breathing to help you find peace in seconds.</p>
+            <p className="text-neutral-700 text-lg mb-8 font-body">Let’s start with guided breathing to help you find peace in seconds.</p>
             <Link to="/coping/breathing">
               <motion.button
                 variants={{
@@ -338,7 +347,7 @@ function Coping() {
                 initial="initial"
                 whileHover="hover"
                 whileTap="tap"
-                className="relative bg-teal-600 text-white px-8 sm:px-12 py-4 sm:py-5 rounded-full text-lg sm:text-xl font-semibold overflow-hidden"
+                className="relative bg-secondary-600 text-white px-8 sm:px-12 py-4 sm:py-5 rounded-full text-lg sm:text-xl font-semibold overflow-hidden"
               >
                 <motion.div 
                   className="absolute inset-0 bg-white/10"
@@ -450,14 +459,14 @@ function Coping() {
               >
                 <div className="flex items-center mb-6 z-10">
                   {technique.icon}
-                  <h3 className="text-2xl font-semibold text-teal-700 ml-5">{technique.title}</h3>
+                  <h3 className="text-2xl font-heading font-semibold text-secondary-700 ml-5">{technique.title}</h3>
                 </div>
-                <p className="text-gray-700 text-lg flex-grow z-10">{technique.description}</p>
+                <p className="text-neutral-700 text-lg flex-grow z-10 font-body">{technique.description}</p>
                 <motion.div
                   initial={{ opacity: 0, x: -30 }}
                   whileHover={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.4, ease: 'easeOut' }}
-                  className="mt-6 text-teal-600 font-semibold text-lg flex items-center z-10"
+                  className="mt-6 text-secondary-600 font-semibold text-lg flex items-center z-10"
                 >
                   Explore Now
                   <motion.span
@@ -481,11 +490,11 @@ function Coping() {
           <motion.h2
             animate={{ y: [0, -5, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className="text-4xl font-semibold text-gray-900 mb-8"
+            className="text-4xl font-heading font-semibold text-neutral-900 mb-8"
           >
             Looking for More?
           </motion.h2>
-          <p className="text-gray-700 text-lg mb-10">Access additional resources or reach out for support.</p>
+          <p className="text-neutral-700 text-lg mb-10 font-body">Access additional resources or reach out for support.</p>
           <div className="flex justify-center gap-8">
             <Button to="/about" text="Resources" colorVariants={resourcesColors} />
             <Button to="/contact" text="Contact Us" colorVariants={contactColors} />
