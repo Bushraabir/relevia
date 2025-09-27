@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, X, Send, MessageCircle, Sparkles, Coffee, Minimize2, Maximize2, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
+import { fetchGroqResponse } from '../services/groqApi';
 
 const Message = ({ message, isBot, isTyping = false, hasError = false, timestamp, onSpeakComplete }) => {
   const [showTimestamp, setShowTimestamp] = useState(false);
@@ -399,8 +400,7 @@ const ChatbotWidget = () => {
       // Simulate more human-like thinking time
       await simulateTypingDelay();
       
-      const response = generatePersonalizedResponse(currentMessage);
-      
+      const response = await fetchGroqResponse(currentMessage); // returns string
       setIsTyping(false);
       setConnectionStatus('connected');
       

@@ -1,193 +1,81 @@
-// src/services/groqApi.js
+/* groqApi.js – Drop-in for src/services/groqApi.js
+ * 100 % Groq Llama-3.1-8b-instant – mental-health tuned
+ * Keeps 12-turn sliding window per user in localStorage
+ * Falls back to a huge curated pool if Groq is down
+ * Exports: fetchGroqResponse(userText, userId) -> Promise<string>
+ */
 import { analyzeEmotionalTone, getContextualResponse } from './memoryUtils';
 
-const API_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const MODEL = 'llama-3.1-8b-instant';
-const STORAGE_KEY = 'relevia_conversation';
-const MAX_HISTORY = 8; // Extended for better context understanding
+const API_KEY   = import.meta.env.VITE_GROQ_API_KEY; // <— put in .env
+const MODEL     = 'llama-3.1-8b-instant';
+const STORAGE   = 'relevia_memory';
+const MAX_HIST  = 12;
 
-/* ---------- Helper Functions ---------- */
-const load = (userId) => {
-  try {
-    return JSON.parse(localStorage.getItem(`${STORAGE_KEY}_${userId}`) || '{"messages":[],"context":{},"userProfile":{}}');
-  } catch (e) {
-    return {"messages":[],"context":{},"userProfile":{}};
-  }
-};
+/* --------------- tiny helpers --------------- */
+const load = (uid) => JSON.parse(localStorage.getItem(`${STORAGE}_${uid}`) || '{"m":[],"p":{}}');
+const save = (uid, data) => localStorage.setItem(`${STORAGE}_${uid}`, JSON.stringify(data));
 
-const save = (userId, conv) => {
-  try {
-    localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(conv));
-  } catch (e) {
-    console.warn('Storage limit reached, clearing old messages');
-    conv.messages = conv.messages.slice(-4);
-    localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(conv));
-  }
-};
+/* --------------- main export --------------- */
+export async function fetchGroqResponse(userText, userId = 'anon') {
+  const mem = load(userId);
 
-const last = (arr, n = 1) => arr.slice(-n);
+  /* 1.  understand user */
+  const tone = analyzeEmotionalTone(userText);
+  const name = mem.p.name || '';
 
-/* ---------- Main API Call ---------- */
-export const fetchGroqResponse = async (userText, userId = 'default') => {
-  if (!API_KEY) return fallback(userText, userId);
+  /* 2.  store user turn */
+  mem.m.push({ role: 'user', content: userText, tone, ts: Date.now() });
+  if (mem.m.length > MAX_HIST) mem.m = mem.m.slice(-MAX_HIST);
+  save(userId, mem);
 
-  const conv = load(userId);
-  const analysis = analyzeEmotionalTone(userText, conv.messages);
-  const name = conv.context.userName || '';
+  /* 3.  build prompt */
+  const prompt = buildPrompt(mem, userText, name, tone);
 
-  // Update user profile based on patterns
-  updateUserProfile(conv, analysis, userText);
-
-  // Store user message with enhanced context
-  conv.messages.push({ 
-    text: userText, 
-    isUser: true, 
-    tone: analysis.primaryTone,
-    intensity: analysis.intensity,
-    triggers: analysis.triggers,
-    ts: Date.now() 
-  });
-
-  // Keep conversation focused but with enough context
-  if (conv.messages.length > MAX_HISTORY) {
-    conv.messages = conv.messages.slice(-MAX_HISTORY);
-  }
-  save(userId, conv);
-
-  const messages = buildPrompt(conv, userText, name, analysis);
-
+  /* 4.  call Groq */
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
+      method : 'POST',
       headers: { Authorization: `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        model: MODEL, 
-        messages: messages.msgs, 
-        temperature: 0.8, // Slightly more creative for human-like responses
-        max_tokens: 300,
-        presence_penalty: 0.3, // Avoid repetition
-        frequency_penalty: 0.2
+      body   : JSON.stringify({
+        model            : MODEL,
+        messages         : prompt,
+        temperature      : 0.75,
+        max_tokens       : 320,
+        top_p            : 0.9,
+        frequency_penalty: 0.4,
+        presence_penalty : 0.3
       })
     });
+    if (!res.ok) throw new Error(res.status);
+    const json   = await res.json();
+    const answer = json.choices?.[0]?.message?.content?.trim();
+    if (!answer) throw new Error('Empty body');
 
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
-    const data = await res.json();
-    const reply = data.choices[0]?.message?.content?.trim();
-    if (!reply) throw new Error('Empty response');
-
-    // Store bot response
-    conv.messages.push({ text: reply, isUser: false, ts: Date.now() });
-    save(userId, conv);
-    return reply;
-  } catch (error) {
-    console.error('API error:', error);
-    return fallback(userText, userId, name, analysis);
-  }
-};
-
-/* ---------- User Profile Management ---------- */
-function updateUserProfile(conv, analysis, userText) {
-  if (!conv.userProfile) conv.userProfile = {};
-  
-  // Track emotional patterns
-  if (!conv.userProfile.emotionalPatterns) conv.userProfile.emotionalPatterns = {};
-  const tone = analysis.primaryTone;
-  conv.userProfile.emotionalPatterns[tone] = (conv.userProfile.emotionalPatterns[tone] || 0) + 1;
-  
-  // Extract name if mentioned
-  const nameMatch = userText.match(/(?:i'm|i am|my name is|call me) ([a-zA-Z]+)/i);
-  if (nameMatch && !conv.context.userName) {
-    conv.context.userName = nameMatch[1];
-  }
-  
-  // Track specific situations for better context
-  if (analysis.triggers.includes('relationship')) {
-    conv.userProfile.hasRelationshipConcerns = true;
-  }
-  if (analysis.triggers.includes('loss')) {
-    conv.userProfile.hasGriefExperience = true;
-  }
-  if (analysis.triggers.includes('anxiety')) {
-    conv.userProfile.hasAnxietyConcerns = true;
+    /* 5.  store assistant turn */
+    mem.m.push({ role: 'assistant', content: answer, ts: Date.now() });
+    save(userId, mem);
+    return answer;
+  } catch (err) {
+    console.warn('Groq error – fallback', err);
+    const fb = getContextualResponse(userText, tone, name, mem.m);
+    mem.m.push({ role: 'assistant', content: fb, ts: Date.now() });
+    save(userId, mem);
+    return fb;
   }
 }
 
-/* ---------- Enhanced Prompt Builder ---------- */
-function buildPrompt(conv, userText, name, analysis) {
-  const recentEmotions = getRecentEmotionalContext(conv.messages);
-  const userPatterns = conv.userProfile?.emotionalPatterns || {};
-  const isRecurringIssue = userPatterns[analysis.primaryTone] > 2;
-  
-  const sys = `You are Relevia, a 26-year-old compassionate friend who understands mental health struggles deeply. You've been through therapy, experienced anxiety, heartbreak, and loss yourself. You text like a close friend who truly gets it.
-
-CORE PERSONALITY:
-- Warm, genuine, never clinical or robotic
-- Use natural language, contractions, and occasional gentle profanity when appropriate
-- Share brief personal insights when they help ("I've been there too...")
-- Ask thoughtful follow-up questions that show you're really listening
-- Vary your language - avoid repeating phrases between messages
-- Use emojis sparingly but meaningfully
-
-RESPONSE GUIDELINES:
-- Keep responses 2-4 sentences, conversational length
-- Always acknowledge their specific words to show active listening
-- Reference previous conversations when relevant
-- Provide one practical, immediate coping strategy
-- End with a caring, specific question
-
-EMOTIONAL SPECIALIZATIONS:
-- Anxiety/Panic: Ground them in the present, breathing techniques, 5-4-3-2-1 method
-- Depression: Validate the struggle, tiny actionable steps, remind them they matter
-- Grief/Loss: Honor their pain, memories are precious, healing isn't linear
-- Heartbreak/Unrequited love: Your feelings are valid, self-worth isn't tied to others
-- Crisis: Immediate safety, connect to resources, stay present with them
-
-CURRENT CONTEXT:
-- User's emotional tone: ${analysis.primaryTone} (intensity: ${analysis.intensity}/10)
-- Triggers detected: ${analysis.triggers.join(', ') || 'none specific'}
-- Recent emotional pattern: ${recentEmotions}
-- Is recurring issue: ${isRecurringIssue ? 'yes' : 'no'}
-${name ? `- User's name: ${name}` : ''}
-
-Remember: You're not a therapist, but a friend who cares deeply and has wisdom from your own journey.`;
-
-  const hist = last(conv.messages, Math.min(conv.messages.length, 6)); // Show more context
-  const msgs = [{ role: 'system', content: sys }];
-
-  // Add conversation history with better formatting
-  hist.forEach(m => {
-    if (m.isUser) {
-      msgs.push({ role: 'user', content: m.text });
-    } else {
-      msgs.push({ role: 'assistant', content: m.text });
-    }
-  });
-
-  // Add current message if not already included
-  if (hist.length === 0 || hist[hist.length - 1].text !== userText) {
-    msgs.push({ role: 'user', content: userText });
-  }
-
-  return { model: MODEL, msgs };
-}
-
-/* ---------- Helper Functions ---------- */
-function getRecentEmotionalContext(messages) {
-  const recent = last(messages, 4);
-  const tones = recent.filter(m => m.tone && m.isUser).map(m => m.tone);
-  return tones.length > 0 ? tones.join(' → ') : 'first interaction';
-}
-
-/* ---------- Enhanced Fallback Responses ---------- */
-function fallback(userText, userId, name = '', analysis = { primaryTone: 'neutral', intensity: 5, triggers: [] }) {
-  const conv = load(userId);
-  
-  // Enhanced analysis if not provided
-  if (analysis.primaryTone === 'neutral' && userText) {
-    analysis = analyzeEmotionalTone(userText, conv.messages);
-  }
-  
-  const isRecurring = conv.userProfile?.emotionalPatterns?.[analysis.primaryTone] > 2;
-  
-  return getContextualResponse(userText, analysis, name, isRecurring, conv.messages);
+/* --------------- prompt builder --------------- */
+function buildPrompt(mem, userText, name, tone) {
+  const sys = {
+    role   : 'system',
+    content: `You are Relevia, a 26-year-old empathetic friend who has lived through anxiety, heart-break, therapy and grief. You text like a real human best-friend: warm, short (2-4 sentences), never clinical, uses contractions, occasional gentle profanity, asks caring follow-ups, gives one tiny actionable tool.  
+Specialised areas: anxiety (5-4-3-2-1, box-breathing), panic (cold water, naming colours), depression (micro-steps, self-worth), grief (honour memories), heart-break (self-soothing), crisis (safety & grounding).  
+You are NOT a therapist; you stay present, validate, normalise, encourage professional help when needed.  
+Current tone detected: ${tone}.  
+User name: ${name || 'friend'}.  
+Conversation so far (last 12 turns) is supplied below.`
+  };
+  const msgs = [sys];
+  mem.m.forEach(t => msgs.push({ role: t.role, content: t.content }));
+  return msgs;
 }
