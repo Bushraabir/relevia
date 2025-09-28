@@ -3,8 +3,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Pause, Play, RotateCcw, Settings, Volume2, VolumeX, Moon, Sun, ChevronUp, ChevronDown } from 'lucide-react';
 import Ballpit from '../Balls';
 
+// Bio-feedback constants
+const JITTER_THRESHOLD_HIGH = 18;   // ms
+const JITTER_THRESHOLD_LOW  = 8;    // ms
 
-const patterns = {
+const initialPatterns = {
   calm: {
     name: 'Ocean Calm',
     description: 'Gentle waves of tranquility',
@@ -188,6 +191,7 @@ const ProgressRing = ({ progress, color, size = 240 }) => {
 };
 
 function Breathing() {
+  const [patterns, setPatterns] = useState(initialPatterns);
   const [selectedPattern, setSelectedPattern] = useState('calm');
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(-1);
   const [isRunning, setIsRunning] = useState(false);
@@ -205,6 +209,19 @@ function Breathing() {
   
   const startTimeRef = useRef(null);
   const sessionStartRef = useRef(null);
+  
+  // Bio-feedback refs
+  const pressTimes = useRef([]);          // raw key-down timestamps
+  const jitterRef  = useRef(0);           // latest jitter value
+  
+  // ---------- AUDIO SYNTH ----------
+  const audioCtx     = useRef(null);
+  const oscL         = useRef(null), oscR   = useRef(null);
+  const subOsc       = useRef(null);            // 64 Hz rumble
+  const gainL        = useRef(null), gainR  = useRef(null);
+  const subGain      = useRef(null);
+  const panner       = useRef(null);
+  
   const pattern = patterns[selectedPattern];
 
   // Screen size tracking
@@ -213,14 +230,42 @@ function Breathing() {
       setScreenSize({ width: window.innerWidth, height: window.innerHeight });
     };
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    
+    // ---------- INIT WEB-AUDIO ----------
+    if (soundEnabled && !audioCtx.current) {
+      audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
+      gainL.current    = audioCtx.current.createGain();
+      gainR.current    = audioCtx.current.createGain();
+      subGain.current  = audioCtx.current.createGain();
+      panner.current   = audioCtx.current.createStereoPanner();
+
+      oscL.current     = audioCtx.current.createOscillator();
+      oscR.current     = audioCtx.current.createOscillator();
+      subOsc.current   = audioCtx.current.createOscillator();
+
+      // wiring
+      oscL.current.connect(gainL.current).connect(panner.current);
+      oscR.current.connect(gainR.current).connect(panner.current);
+      subOsc.current.connect(subGain.current).connect(panner.current);
+      panner.current.connect(audioCtx.current.destination);
+
+      // start oscillators
+      oscL.current.start();
+      oscR.current.start();
+      subOsc.current.start();
+    }
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      audioCtx.current?.close();
+    };
+  }, [soundEnabled]);
 
   const isMobile = screenSize.width < 768;
   const isTablet = screenSize.width < 1024;
   const isXL = screenSize.width >= 1280;
 
-  // Main breathing loop
+  // Main breathing loop with bio-feedback integration
   useEffect(() => {
     if (!isRunning || currentPhaseIndex === -1) return;
 
@@ -244,8 +289,53 @@ function Breathing() {
       setCurrentPhaseIndex(nextPhaseIndex);
     }, currentPhase.duration);
 
-    return () => clearTimeout(timer);
-  }, [isRunning, currentPhaseIndex, pattern]);
+    // Bio-feedback integration
+    const keyHandler = (e) => {
+      if (isRunning) pressTimes.current.push(performance.now());
+    };
+    window.addEventListener('keydown', keyHandler);
+
+    // Jitter calculation and breathing adaptation
+    const jitterInterval = setInterval(() => {
+      const times = pressTimes.current;
+      if (times.length < 5) return;                      // need enough presses
+      const diffs = times.slice(1).map((t,i)=> Math.abs(t - times[i])).filter(d=> d<500);
+      const jitter = diffs.length ? diffs.reduce((a,b)=>a+b,0)/diffs.length : 0;
+      jitterRef.current = jitter;
+      pressTimes.current = [];                           // reset buffer
+      
+      // Adapt breathing speed based on jitter
+      const baseDurations = initialPatterns[selectedPattern].phases.map(p => p.duration);
+      let multiplier = 1;
+      
+      if (jitter > JITTER_THRESHOLD_HIGH) {
+        multiplier = 1.2;   // slower → calm
+      } else if (jitter < JITTER_THRESHOLD_LOW) {
+        multiplier = 1;     // default
+      } else {
+        multiplier = 0.95;  // slightly faster
+      }
+      
+      // Update pattern durations
+      setPatterns(prev => ({
+        ...prev,
+        [selectedPattern]: {
+          ...prev[selectedPattern],
+          phases: prev[selectedPattern].phases.map((p, index) => {
+            const newDuration = Math.max(3000, Math.min(8000, baseDurations[index] * multiplier));
+            return { ...p, duration: newDuration };
+          })
+        }
+      }));
+    }, 5000);   // every 5 seconds
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', keyHandler);
+      clearInterval(jitterInterval);
+      audioCtx.current?.close();   // silence audio
+    };
+  }, [isRunning, currentPhaseIndex, pattern, selectedPattern]);
 
   // Progress and time tracking
   useEffect(() => {
@@ -285,6 +375,38 @@ function Breathing() {
     }
   }, [cycle]);
 
+  const currentPhase = currentPhaseIndex !== -1 ? pattern.phases[currentPhaseIndex] : null;
+  const breathingScale = currentPhase ? 
+    1 + ((currentPhase.targetScale - 1) * (currentPhase.name.includes('in') || currentPhase.name.includes('inhale') ? progress : 1 - progress)) 
+    : 1;
+
+  // ---------- REAL-TIME SYNTH PARAMS ----------
+  useEffect(() => {
+    if (!soundEnabled || !audioCtx.current) return;
+
+    const base    = 256;                          // middle-C
+    const beat    = 6 + (jitterRef.current * 0.01); // 6 Hz ± jitter
+    const inhale  = currentPhase?.name.includes('in');
+    const semi    = inhale ? 3 : -3;              // ±3 semitones
+    const freq    = base * Math.pow(2, semi / 12);
+    const now     = audioCtx.current.currentTime;
+
+    // frequencies
+    oscL.current.frequency.setTargetAtTime(freq, now, 0.1);
+    oscR.current.frequency.setTargetAtTime(freq + beat, now, 0.1);
+    subOsc.current.frequency.setTargetAtTime(64, now, 0.1); // chest rumble
+
+    // volumes (scale with circle size)
+    const vol     = 0.0003 * (breathingScale ** 2);
+    gainL.current.gain.setTargetAtTime(vol, now, 0.1);
+    gainR.current.gain.setTargetAtTime(vol, now, 0.1);
+    subGain.current.gain.setTargetAtTime(vol * 0.5, now, 0.1); // quieter sub
+
+    // 3-D pan: inhale → right, exhale → left
+    const panValue = inhale ? 0.3 : -0.3;
+    panner.current.pan.setTargetAtTime(panValue, now, 0.1);
+  }, [soundEnabled, currentPhase, breathingScale]);
+
   const startExercise = useCallback(() => {
     if (currentPhaseIndex === -1) {
       setCurrentPhaseIndex(0);
@@ -308,6 +430,8 @@ function Breathing() {
     setProgress(0);
     setCurrentAffirmation('');
     sessionStartRef.current = null;
+    // Reset patterns to initial state
+    setPatterns(initialPatterns);
   }, []);
 
   const formatTime = (seconds) => {
@@ -315,11 +439,6 @@ function Breathing() {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
-  const currentPhase = currentPhaseIndex !== -1 ? pattern.phases[currentPhaseIndex] : null;
-  const breathingScale = currentPhase ? 
-    1 + ((currentPhase.targetScale - 1) * (currentPhase.name.includes('in') || currentPhase.name.includes('inhale') ? progress : 1 - progress)) 
-    : 1;
 
   const bgClass = isDarkMode 
     ? "min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-800"
@@ -361,12 +480,38 @@ function Breathing() {
         ))}
       </div>
 
+      {/* Bio-feedback Debug Info - Development only */}
+      {process.env.NODE_ENV === 'development' && (
+        <motion.div 
+          className="fixed top-4 left-4 backdrop-blur-md rounded-xl p-3 text-sm shadow-lg z-30 border"
+          style={{
+            background: isDarkMode 
+              ? 'rgba(30, 41, 59, 0.9)' 
+              : 'rgba(255, 255, 255, 0.9)',
+            borderColor: isDarkMode 
+              ? 'rgba(255, 255, 255, 0.2)' 
+              : 'rgba(226, 232, 240, 0.5)',
+            color: isDarkMode ? 'white' : '#374151'
+          }}
+        >
+          <div>Jitter: {jitterRef.current.toFixed(1)}ms</div>
+          <div>Keys: {pressTimes.current.length}</div>
+          {soundEnabled && currentPhase && (
+            <div className="text-xs opacity-75 mt-1">
+              ♪ {(6 + (jitterRef.current * 0.01)).toFixed(2)} Hz | 
+              pan {(currentPhase.name.includes('in') ? 0.3 : -0.3).toFixed(1)} | 
+              vol {(0.0003 * (breathingScale ** 2) * 1000).toFixed(2)}
+            </div>
+          )}
+        </motion.div>
+      )}
+
       {/* Mobile Layout */}
       {isMobile ? (
         <div className="relative z-10 min-h-screen flex flex-col">
           
           {/* Mobile Header */}
-          <div className="flex-shrink-0 p-4 text-center pt-8">
+          <div className="flex-shrink-0 p-4 text-center pt-safe-area-inset-top pt-8">
             <motion.div
               initial={{ y: -30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -495,7 +640,7 @@ function Breathing() {
           </div>
 
           {/* Collapsible Mobile Controls */}
-          <div className="flex-shrink-0 pointer-events-auto">
+          <div className="flex-shrink-0 pointer-events-auto pb-safe-area-inset-bottom">
             {/* Collapse Toggle */}
             <div className="flex justify-center mb-2">
               <motion.button
@@ -693,19 +838,19 @@ function Breathing() {
         </div>
       ) : (
         // Desktop/Tablet Layout
-        <div className="relative z-10 min-h-screen flex flex-col xl:flex-row">
+        <div className="relative z-10 min-h-screen flex">
           
           {/* Main Breathing Interface */}
-          <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 pointer-events-none">
+          <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 pointer-events-none max-w-[calc(100vw-20rem)]">
             
             {/* Header */}
             <motion.div
-              className="text-center mb-8 md:mb-16"
+              className="text-center mb-8 md:mb-12"
               initial={{ y: -30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 1, delay: 0.3 }}
             >
-              <h1 className={`text-4xl md:text-6xl lg:text-7xl font-light mb-4 ${
+              <h1 className={`text-4xl md:text-5xl lg:text-6xl font-light mb-4 ${
                 isDarkMode 
                   ? 'text-white bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent' 
                   : 'text-slate-700 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'
@@ -718,7 +863,7 @@ function Breathing() {
             </motion.div>
 
             {/* Main Breathing Circle with Glassmorphism */}
-            <div className="relative flex items-center justify-center mb-12 md:mb-20">
+            <div className="relative flex items-center justify-center mb-8 md:mb-12">
               
               {/* Progress Ring */}
               <ProgressRing progress={progress} color={pattern.color} size={isTablet ? 200 : 240} />
@@ -811,7 +956,7 @@ function Breathing() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="text-center mb-8 md:mb-16 max-w-lg px-4"
+                  className="text-center mb-8 md:mb-12 max-w-lg px-4"
                 >
                   <p className={`text-lg md:text-xl leading-relaxed filter drop-shadow-sm ${
                     isDarkMode ? 'text-slate-100' : 'text-slate-600'
@@ -825,7 +970,7 @@ function Breathing() {
 
           {/* Control Panel - Desktop/Tablet - Interactive */}
           <div 
-            className={`w-full ${isXL ? 'xl:w-96' : 'md:w-80'} backdrop-blur-xl p-4 md:p-8 flex flex-col justify-between border-l pointer-events-auto`}
+            className="w-80 backdrop-blur-xl p-6 flex flex-col justify-between border-l pointer-events-auto overflow-y-auto"
             style={{
               background: isDarkMode 
                 ? 'rgba(0, 0, 0, 0.3)' 
@@ -833,6 +978,7 @@ function Breathing() {
               borderColor: isDarkMode 
                 ? 'rgba(255, 255, 255, 0.1)' 
                 : 'rgba(255, 255, 255, 0.3)',
+              maxHeight: '100vh'
             }}
           >
             
@@ -1061,7 +1207,7 @@ function Breathing() {
             initial={{ opacity: 0, y: 30, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -30, scale: 0.9 }}
-            className={`fixed ${isMobile ? 'bottom-20 left-4 right-4' : 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'} backdrop-blur-xl rounded-2xl p-4 md:p-6 max-w-md mx-auto text-center shadow-xl border z-50 pointer-events-none`}
+            className={`fixed ${isMobile ? 'bottom-32 left-4 right-4' : 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'} backdrop-blur-xl rounded-2xl p-4 md:p-6 max-w-md mx-auto text-center shadow-xl border z-50 pointer-events-none`}
             style={{
               background: isDarkMode 
                 ? 'rgba(255, 255, 255, 0.08)' 
@@ -1162,6 +1308,19 @@ function Breathing() {
                   </div>
                 </div>
 
+                {soundEnabled && (
+                  <div className={`p-4 rounded-xl border ${
+                    isDarkMode 
+                      ? 'bg-blue-900/20 border-blue-700/30 text-blue-100' 
+                      : 'bg-blue-50 border-blue-200 text-blue-800'
+                  }`}>
+                    <div className="font-medium mb-2">Audio Features Active</div>
+                    <div className="text-sm opacity-75">
+                      Adaptive binaural audio + 64 Hz sub-bass that follows your breathing and typing calm.
+                    </div>
+                  </div>
+                )}
+
                 <motion.button
                   onClick={() => setIsSettingsOpen(false)}
                   className="w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-medium"
@@ -1251,7 +1410,7 @@ function Breathing() {
         )}
       </AnimatePresence>
 
-      {/* Touch-friendly Sound Toggle */}
+      {/* Touch-friendly Sound Toggle for non-mobile */}
       {!isMobile && (
         <div className="fixed bottom-4 left-4 z-40">
           <motion.button
@@ -1302,15 +1461,25 @@ function Breathing() {
             color: isDarkMode ? 'white' : '#374151'
           }}
         >
-          🔊 Sound enabled (visual feedback only)
+          🔊 Binaural audio active
         </motion.div>
       )}
 
-      {/* Mobile-specific touch improvements */}
+      {/* Mobile-specific CSS improvements */}
       <style jsx>{`
+        /* Safe area support for newer devices */
+        .pt-safe-area-inset-top {
+          padding-top: max(2rem, env(safe-area-inset-top));
+        }
+        
+        .pb-safe-area-inset-bottom {
+          padding-bottom: max(1rem, env(safe-area-inset-bottom));
+        }
+        
         @media (max-width: 768px) {
+          /* Ensure touch events work on mobile for interactive elements */
           .pointer-events-none {
-            /* Ensure touch events work on mobile for interactive elements */
+            /* Allow pointer events on children */
           }
           
           /* Improve touch targets */
@@ -1334,6 +1503,12 @@ function Breathing() {
           * {
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
           }
+          
+          /* Optimize viewport handling */
+          .min-h-screen {
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+          }
         }
         
         @media (max-width: 640px) {
@@ -1349,6 +1524,28 @@ function Breathing() {
           button {
             min-height: 48px;
             min-width: 48px;
+          }
+        }
+        
+        /* Desktop layout improvements */
+        @media (min-width: 1024px) {
+          /* Ensure control panel stays in view */
+          .overflow-y-auto {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+          }
+          
+          .overflow-y-auto::-webkit-scrollbar {
+            width: 4px;
+          }
+          
+          .overflow-y-auto::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          
+          .overflow-y-auto::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
           }
         }
         
@@ -1368,6 +1565,12 @@ function Breathing() {
           }
         }
         
+        /* Focus visible improvements */
+        button:focus-visible {
+          outline: 2px solid rgba(59, 130, 246, 0.5);
+          outline-offset: 2px;
+        }
+        
         /* Dark mode system preference */
         @media (prefers-color-scheme: dark) {
           /* Additional dark mode styles if needed */
@@ -1376,6 +1579,10 @@ function Breathing() {
         /* Portrait orientation optimizations */
         @media (orientation: portrait) and (max-width: 768px) {
           /* Optimize for mobile portrait */
+          .flex-1 {
+            flex: 1 1 0%;
+            min-height: 0;
+          }
         }
         
         /* Landscape orientation optimizations */
@@ -1384,10 +1591,30 @@ function Breathing() {
           .min-h-screen {
             min-height: 100vh;
           }
+          
+          .mb-8 {
+            margin-bottom: 1rem;
+          }
+          
+          .mb-12 {
+            margin-bottom: 1.5rem;
+          }
+        }
+        
+        /* Print styles */
+        @media print {
+          .fixed {
+            position: static !important;
+          }
+          
+          .backdrop-blur-xl {
+            backdrop-filter: none;
+            background: white !important;
+          }
         }
       `}</style>
     </motion.div>
   );
 }
 
-export default Breathing; 
+export default Breathing;
