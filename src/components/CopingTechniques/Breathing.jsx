@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Pause, Play, RotateCcw, Settings, Volume2, VolumeX, Moon, Sun } from 'lucide-react';
+import { Pause, Play, RotateCcw, Settings, Volume2, VolumeX, Moon, Sun, ChevronUp, ChevronDown } from 'lucide-react';
 import Ballpit from '../Balls';
 
 
@@ -96,9 +96,21 @@ const FloatingParticle = ({ delay = 0, color = '#38BDF8' }) => {
 };
 
 const BreathingGuide = ({ phase, progress, isActive, color }) => {
+  const [screenSize, setScreenSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (!isActive || !phase) return null;
   
-  const circleSize = 100 + (phase.targetScale - 1) * progress * 60;
+  const isMobile = screenSize.width < 768;
+  const circleSize = isMobile ? 60 + (phase.targetScale - 1) * progress * 40 : 100 + (phase.targetScale - 1) * progress * 60;
+  const svgSize = isMobile ? 280 : 320;
   
   return (
     <motion.div
@@ -106,7 +118,7 @@ const BreathingGuide = ({ phase, progress, isActive, color }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: isActive ? 0.4 : 0 }}
     >
-      <svg width="320" height="320" viewBox="0 0 320 320" className="absolute">
+      <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`} className="absolute">
         <defs>
           <radialGradient id="breatheGradient" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor={color} stopOpacity="0.15" />
@@ -114,8 +126,8 @@ const BreathingGuide = ({ phase, progress, isActive, color }) => {
           </radialGradient>
         </defs>
         <motion.circle
-          cx="160"
-          cy="160"
+          cx={svgSize/2}
+          cy={svgSize/2}
           r={circleSize}
           fill="url(#breatheGradient)"
           stroke={color}
@@ -132,22 +144,35 @@ const BreathingGuide = ({ phase, progress, isActive, color }) => {
 };
 
 const ProgressRing = ({ progress, color, size = 240 }) => {
+  const [screenSize, setScreenSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = screenSize.width < 640;
+  const isTablet = screenSize.width < 1024;
+  const actualSize = isMobile ? 180 : isTablet ? 200 : size;
   const circumference = 2 * Math.PI * 100;
   const strokeDashoffset = circumference - (progress * circumference);
   
   return (
-    <svg className="absolute transform -rotate-90 pointer-events-none" width={size} height={size}>
+    <svg className="absolute transform -rotate-90 pointer-events-none" width={actualSize} height={actualSize}>
       <circle
-        cx={size/2}
-        cy={size/2}
+        cx={actualSize/2}
+        cy={actualSize/2}
         r="100"
         stroke="rgba(255,255,255,0.08)"
         strokeWidth="2"
         fill="transparent"
       />
       <motion.circle
-        cx={size/2}
-        cy={size/2}
+        cx={actualSize/2}
+        cy={actualSize/2}
         r="100"
         stroke={color}
         strokeWidth="3"
@@ -175,10 +200,25 @@ function Breathing() {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [completionCelebration, setCompletionCelebration] = useState(null);
+  const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
+  const [screenSize, setScreenSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   
   const startTimeRef = useRef(null);
   const sessionStartRef = useRef(null);
   const pattern = patterns[selectedPattern];
+
+  // Screen size tracking
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = screenSize.width < 768;
+  const isTablet = screenSize.width < 1024;
+  const isXL = screenSize.width >= 1280;
 
   // Main breathing loop
   useEffect(() => {
@@ -295,9 +335,9 @@ function Breathing() {
       {/* Interactive Ballpit Background */}
       <div className="absolute inset-0 z-0">
         <Ballpit 
-          followCursor={true}
+          followCursor={!isMobile}
           colors={[pattern.color, '#ffffff', pattern.color]}
-          count={150}
+          count={isMobile ? 80 : isTablet ? 120 : 150}
           gravity={0.3}
           friction={0.98}
           className="opacity-60"
@@ -312,7 +352,7 @@ function Breathing() {
         }`} />
         
         {/* Floating particles */}
-        {[...Array(8)].map((_, i) => (
+        {[...Array(isMobile ? 4 : 8)].map((_, i) => (
           <FloatingParticle 
             key={`particle-${i}`} 
             delay={i * 2} 
@@ -321,396 +361,729 @@ function Breathing() {
         ))}
       </div>
 
-      <div className="relative z-10 min-h-screen flex flex-col xl:flex-row">
-        
-        {/* Main Breathing Interface */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 pointer-events-none">
+      {/* Mobile Layout */}
+      {isMobile ? (
+        <div className="relative z-10 min-h-screen flex flex-col">
           
-          {/* Header */}
-          <motion.div
-            className="text-center mb-8 md:mb-16"
-            initial={{ y: -30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 1, delay: 0.3 }}
-          >
-            <h1 className={`text-4xl md:text-6xl lg:text-7xl font-light mb-4 ${
-              isDarkMode 
-                ? 'text-white bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent' 
-                : 'text-slate-700 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'
-            }`}>
-              Breathe
-            </h1>
-            <p className={`text-lg md:text-xl max-w-md mx-auto ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-              {pattern.description}
-            </p>
-          </motion.div>
-
-          {/* Main Breathing Circle with Glassmorphism */}
-          <div className="relative flex items-center justify-center mb-12 md:mb-20">
-            
-            {/* Progress Ring */}
-            <ProgressRing progress={progress} color={pattern.color} size={window.innerWidth < 768 ? 200 : 240} />
-            
-            {/* Breathing Guide */}
-            <BreathingGuide phase={currentPhase} progress={progress} isActive={isRunning} color={pattern.color} />
-            
-            {/* Main Glassmorphism Circle */}
+          {/* Mobile Header */}
+          <div className="flex-shrink-0 p-4 text-center pt-8">
             <motion.div
-              className="relative rounded-full backdrop-blur-xl border shadow-2xl"
-              style={{
-                width: window.innerWidth < 768 ? '200px' : '240px',
-                height: window.innerWidth < 768 ? '200px' : '240px',
-                background: isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.05)' 
-                  : 'rgba(255, 255, 255, 0.25)',
-                borderColor: isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.1)' 
-                  : 'rgba(255, 255, 255, 0.3)',
-                boxShadow: isDarkMode
-                  ? '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                  : '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
-              }}
-              animate={{
-                scale: breathingScale,
-                boxShadow: currentPhase ? 
-                  `0 0 ${40 * breathingScale}px ${pattern.color}40, 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)` : 
-                  isDarkMode 
-                    ? '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                    : '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
-              }}
-              transition={{ 
-                scale: { duration: currentPhase ? currentPhase.duration / 1000 : 2, ease: "easeInOut" },
-                boxShadow: { duration: 1 }
-              }}
+              initial={{ y: -30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 1, delay: 0.3 }}
             >
-              {/* Inner glassmorphism layers */}
-              <div 
-                className="absolute inset-4 md:inset-6 rounded-full backdrop-blur-lg" 
-                style={{
-                  background: isDarkMode ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.2)',
-                }}
-              />
-              <div 
-                className="absolute inset-6 md:inset-10 rounded-full backdrop-blur-md" 
-                style={{
-                  background: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.3)',
-                }}
-              />
-              
-              {/* Subtle gradient overlay */}
-              <div 
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)`
-                }}
-              />
-              
-              {/* Content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 md:p-8">
-                <motion.div
-                  key={currentPhaseIndex}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="mb-2 md:mb-4"
-                >
-                  <div className="text-2xl md:text-4xl mb-2 md:mb-3 filter drop-shadow-md">{pattern.icon}</div>
-                  <h3 className={`text-lg md:text-2xl font-medium mb-1 md:mb-2 filter drop-shadow-sm ${
-                    isDarkMode ? 'text-white' : 'text-slate-700'
-                  }`}>
-                    {currentPhase ? currentPhase.name.charAt(0).toUpperCase() + currentPhase.name.slice(1) : 'Ready to begin?'}
-                  </h3>
-                  {currentPhase && (
-                    <div className={`text-sm md:text-lg font-light filter drop-shadow-sm ${
-                      isDarkMode ? 'text-slate-200' : 'text-slate-500'
-                    }`}>
-                      {Math.ceil(remainingTime / 1000)}s
-                    </div>
-                  )}
-                </motion.div>
-              </div>
+              <h1 className={`text-3xl font-light mb-2 ${
+                isDarkMode 
+                  ? 'text-white bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent' 
+                  : 'text-slate-700 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'
+              }`}>
+                Breathe
+              </h1>
+              <p className={`text-base ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                {pattern.description}
+              </p>
             </motion.div>
           </div>
 
-          {/* Phase Instruction */}
-          <AnimatePresence mode="wait">
-            {currentPhase && (
+          {/* Mobile Main Circle */}
+          <div className="flex-1 flex items-center justify-center px-4 pointer-events-none">
+            <div className="relative flex items-center justify-center">
+              
+              {/* Progress Ring */}
+              <ProgressRing progress={progress} color={pattern.color} size={180} />
+              
+              {/* Breathing Guide */}
+              <BreathingGuide phase={currentPhase} progress={progress} isActive={isRunning} color={pattern.color} />
+              
+              {/* Main Circle */}
               <motion.div
-                key={currentPhaseIndex}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="text-center mb-8 md:mb-16 max-w-lg px-4"
-              >
-                <p className={`text-lg md:text-xl leading-relaxed filter drop-shadow-sm ${
-                  isDarkMode ? 'text-slate-100' : 'text-slate-600'
-                }`}>
-                  {currentPhase.instruction}
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Affirmations with Glassmorphism */}
-          <AnimatePresence>
-            {currentAffirmation && (
-              <motion.div
-                initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -30, scale: 0.9 }}
-                className="backdrop-blur-xl rounded-2xl p-4 md:p-6 max-w-md mx-auto text-center shadow-xl border"
+                className="relative rounded-full backdrop-blur-xl border shadow-2xl"
                 style={{
+                  width: '180px',
+                  height: '180px',
                   background: isDarkMode 
-                    ? 'rgba(255, 255, 255, 0.08)' 
-                    : 'rgba(255, 255, 255, 0.4)',
+                    ? 'rgba(255, 255, 255, 0.05)' 
+                    : 'rgba(255, 255, 255, 0.25)',
                   borderColor: isDarkMode 
-                    ? 'rgba(255, 255, 255, 0.15)' 
-                    : 'rgba(255, 255, 255, 0.5)',
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(255, 255, 255, 0.3)',
                   boxShadow: isDarkMode
                     ? '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                    : '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
+                    : '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                }}
+                animate={{
+                  scale: breathingScale,
+                  boxShadow: currentPhase ? 
+                    `0 0 ${30 * breathingScale}px ${pattern.color}40, 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)` : 
+                    isDarkMode 
+                      ? '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                      : '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+                }}
+                transition={{ 
+                  scale: { duration: currentPhase ? currentPhase.duration / 1000 : 2, ease: "easeInOut" },
+                  boxShadow: { duration: 1 }
                 }}
               >
-                <p className={`text-base md:text-lg font-light leading-relaxed filter drop-shadow-sm ${
-                  isDarkMode ? 'text-white' : 'text-slate-700'
-                }`}>
-                  ✨ {currentAffirmation}
-                </p>
+                {/* Inner layers */}
+                <div 
+                  className="absolute inset-4 rounded-full backdrop-blur-lg" 
+                  style={{
+                    background: isDarkMode ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.2)',
+                  }}
+                />
+                <div 
+                  className="absolute inset-8 rounded-full backdrop-blur-md" 
+                  style={{
+                    background: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.3)',
+                  }}
+                />
+                
+                {/* Gradient overlay */}
+                <div 
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)`
+                  }}
+                />
+                
+                {/* Content */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                  <motion.div
+                    key={currentPhaseIndex}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mb-2"
+                  >
+                    <div className="text-2xl mb-2 filter drop-shadow-md">{pattern.icon}</div>
+                    <h3 className={`text-lg font-medium mb-1 filter drop-shadow-sm ${
+                      isDarkMode ? 'text-white' : 'text-slate-700'
+                    }`}>
+                      {currentPhase ? currentPhase.name.charAt(0).toUpperCase() + currentPhase.name.slice(1) : 'Ready to begin?'}
+                    </h3>
+                    {currentPhase && (
+                      <div className={`text-sm font-light filter drop-shadow-sm ${
+                        isDarkMode ? 'text-slate-200' : 'text-slate-500'
+                      }`}>
+                        {Math.ceil(remainingTime / 1000)}s
+                      </div>
+                    )}
+                  </motion.div>
+                </div>
               </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Control Panel - Interactive */}
-        <div 
-          className="w-full xl:w-96 backdrop-blur-xl p-4 md:p-8 flex flex-col justify-between border-l pointer-events-auto"
-          style={{
-            background: isDarkMode 
-              ? 'rgba(0, 0, 0, 0.3)' 
-              : 'rgba(255, 255, 255, 0.25)',
-            borderColor: isDarkMode 
-              ? 'rgba(255, 255, 255, 0.1)' 
-              : 'rgba(255, 255, 255, 0.3)',
-          }}
-        >
-          
-          {/* Dark Mode Toggle */}
-          <div className="flex justify-between items-center mb-6">
-            <h2 className={`text-xl font-medium filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
-              Controls
-            </h2>
-            <motion.button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-3 rounded-full backdrop-blur-md transition-all border"
-              style={{
-                background: isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.1)' 
-                  : 'rgba(0, 0, 0, 0.1)',
-                borderColor: isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.2)' 
-                  : 'rgba(0, 0, 0, 0.2)',
-                color: isDarkMode ? 'white' : '#374151'
-              }}
-              whileHover={{ 
-                scale: 1.05,
-                background: isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.15)' 
-                  : 'rgba(0, 0, 0, 0.15)'
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </motion.button>
+            </div>
           </div>
 
-          {/* Controls */}
-          <div className="space-y-6">
-            
-            {/* Primary Control */}
-            <motion.button
-              onClick={startExercise}
-              className={`w-full py-4 md:py-6 px-6 md:px-8 rounded-2xl font-medium text-lg shadow-xl transition-all ${
-                isRunning 
-                  ? 'bg-amber-500 hover:bg-amber-400 text-white' 
-                  : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 text-white'
-              }`}
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-center justify-center gap-3">
-                {isRunning ? <Pause size={24} /> : <Play size={24} />}
-                {currentPhaseIndex === -1 ? 'Begin Your Journey' : isRunning ? 'Pause' : 'Continue'}
-              </div>
-            </motion.button>
+          {/* Phase Instruction - Mobile */}
+          <div className="flex-shrink-0 px-4 mb-4">
+            <AnimatePresence mode="wait">
+              {currentPhase && (
+                <motion.div
+                  key={currentPhaseIndex}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="text-center"
+                >
+                  <p className={`text-base leading-relaxed filter drop-shadow-sm ${
+                    isDarkMode ? 'text-slate-100' : 'text-slate-600'
+                  }`}>
+                    {currentPhase.instruction}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-            {/* Secondary Controls */}
-            <div className="grid grid-cols-3 gap-3 md:gap-4">
+          {/* Collapsible Mobile Controls */}
+          <div className="flex-shrink-0 pointer-events-auto">
+            {/* Collapse Toggle */}
+            <div className="flex justify-center mb-2">
               <motion.button
-                onClick={resetExercise}
-                className="py-3 md:py-4 px-4 md:px-6 rounded-xl font-medium transition-all backdrop-blur-md border"
+                onClick={() => setIsControlsCollapsed(!isControlsCollapsed)}
+                className="p-2 rounded-full backdrop-blur-md border"
+                style={{
+                  background: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)',
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.4)',
+                  color: isDarkMode ? 'white' : '#374151'
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isControlsCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </motion.button>
+            </div>
+
+            <motion.div
+              initial={false}
+              animate={{ 
+                height: isControlsCollapsed ? 0 : 'auto',
+                opacity: isControlsCollapsed ? 0 : 1 
+              }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div 
+                className="p-4 backdrop-blur-xl border-t"
                 style={{
                   background: isDarkMode 
-                    ? 'rgba(71, 85, 105, 0.7)' 
-                    : 'rgba(226, 232, 240, 0.7)',
+                    ? 'rgba(0, 0, 0, 0.3)' 
+                    : 'rgba(255, 255, 255, 0.25)',
                   borderColor: isDarkMode 
-                    ? 'rgba(71, 85, 105, 0.8)' 
-                    : 'rgba(226, 232, 240, 0.8)',
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(255, 255, 255, 0.3)',
+                }}
+              >
+                
+                {/* Primary Control */}
+                <motion.button
+                  onClick={startExercise}
+                  className={`w-full py-4 px-6 rounded-2xl font-medium text-lg shadow-xl mb-4 transition-all ${
+                    isRunning 
+                      ? 'bg-amber-500 hover:bg-amber-400 text-white' 
+                      : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 text-white'
+                  }`}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    {isRunning ? <Pause size={20} /> : <Play size={20} />}
+                    {currentPhaseIndex === -1 ? 'Begin Journey' : isRunning ? 'Pause' : 'Continue'}
+                  </div>
+                </motion.button>
+
+                {/* Secondary Controls */}
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  <motion.button
+                    onClick={resetExercise}
+                    className="py-3 px-3 rounded-xl font-medium transition-all backdrop-blur-md border"
+                    style={{
+                      background: isDarkMode 
+                        ? 'rgba(71, 85, 105, 0.7)' 
+                        : 'rgba(226, 232, 240, 0.7)',
+                      borderColor: isDarkMode 
+                        ? 'rgba(71, 85, 105, 0.8)' 
+                        : 'rgba(226, 232, 240, 0.8)',
+                      color: isDarkMode ? 'white' : '#374151'
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    disabled={currentPhaseIndex === -1}
+                  >
+                    <RotateCcw size={16} className="mx-auto" />
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="py-3 px-3 rounded-xl font-medium transition-all backdrop-blur-md"
+                    style={{
+                      background: 'rgba(168, 85, 247, 0.8)',
+                      color: 'white'
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Settings size={16} className="mx-auto" />
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => setSoundEnabled(!soundEnabled)}
+                    className="py-3 px-3 rounded-xl font-medium transition-all backdrop-blur-md"
+                    style={{
+                      background: soundEnabled 
+                        ? 'rgba(34, 197, 94, 0.8)' 
+                        : isDarkMode 
+                          ? 'rgba(71, 85, 105, 0.7)' 
+                          : 'rgba(148, 163, 184, 0.7)',
+                      color: 'white'
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {soundEnabled ? <Volume2 size={16} className="mx-auto" /> : <VolumeX size={16} className="mx-auto" />}
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => setIsDarkMode(!isDarkMode)}
+                    className="py-3 px-3 rounded-xl font-medium transition-all backdrop-blur-md border"
+                    style={{
+                      background: isDarkMode 
+                        ? 'rgba(255, 255, 255, 0.1)' 
+                        : 'rgba(0, 0, 0, 0.1)',
+                      borderColor: isDarkMode 
+                        ? 'rgba(255, 255, 255, 0.2)' 
+                        : 'rgba(0, 0, 0, 0.2)',
+                      color: isDarkMode ? 'white' : '#374151'
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {isDarkMode ? <Sun size={16} className="mx-auto" /> : <Moon size={16} className="mx-auto" />}
+                  </motion.button>
+                </div>
+
+                {/* Pattern Selection - Mobile */}
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {Object.entries(patterns).map(([key, pat]) => (
+                    <motion.button
+                      key={key}
+                      onClick={() => setSelectedPattern(key)}
+                      className="p-3 rounded-xl text-left transition-all backdrop-blur-md border"
+                      style={{
+                        background: selectedPattern === key 
+                          ? isDarkMode 
+                            ? 'rgba(255, 255, 255, 0.15)' 
+                            : 'rgba(255, 255, 255, 0.6)'
+                          : isDarkMode 
+                            ? 'rgba(255, 255, 255, 0.05)' 
+                            : 'rgba(255, 255, 255, 0.2)',
+                        borderColor: selectedPattern === key 
+                          ? isDarkMode 
+                            ? 'rgba(255, 255, 255, 0.3)' 
+                            : 'rgba(59, 130, 246, 0.5)'
+                          : 'transparent',
+                        color: isDarkMode ? 'white' : selectedPattern === key ? '#1e293b' : '#64748b'
+                      }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="text-lg mb-1">{pat.icon}</div>
+                      <div className="font-medium text-xs">{pat.name}</div>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Stats - Mobile */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div 
+                    className="rounded-xl p-3 text-center backdrop-blur-md border"
+                    style={{
+                      background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
+                      borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
+                    }}
+                  >
+                    <div className={`font-bold text-lg filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{cycle}</div>
+                    <div className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>Cycles</div>
+                  </div>
+                  <div 
+                    className="rounded-xl p-3 text-center backdrop-blur-md border"
+                    style={{
+                      background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
+                      borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
+                    }}
+                  >
+                    <div className={`font-bold text-lg filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{formatTime(sessionDuration)}</div>
+                    <div className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>Time</div>
+                  </div>
+                  <div 
+                    className="rounded-xl p-3 text-center backdrop-blur-md border"
+                    style={{
+                      background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
+                      borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
+                    }}
+                  >
+                    <div className={`font-bold text-lg filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
+                      {Math.min(100, Math.round((cycle / 10) * 100))}%
+                    </div>
+                    <div className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>Peace</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      ) : (
+        // Desktop/Tablet Layout
+        <div className="relative z-10 min-h-screen flex flex-col xl:flex-row">
+          
+          {/* Main Breathing Interface */}
+          <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 pointer-events-none">
+            
+            {/* Header */}
+            <motion.div
+              className="text-center mb-8 md:mb-16"
+              initial={{ y: -30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 1, delay: 0.3 }}
+            >
+              <h1 className={`text-4xl md:text-6xl lg:text-7xl font-light mb-4 ${
+                isDarkMode 
+                  ? 'text-white bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent' 
+                  : 'text-slate-700 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'
+              }`}>
+                Breathe
+              </h1>
+              <p className={`text-lg md:text-xl max-w-md mx-auto ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                {pattern.description}
+              </p>
+            </motion.div>
+
+            {/* Main Breathing Circle with Glassmorphism */}
+            <div className="relative flex items-center justify-center mb-12 md:mb-20">
+              
+              {/* Progress Ring */}
+              <ProgressRing progress={progress} color={pattern.color} size={isTablet ? 200 : 240} />
+              
+              {/* Breathing Guide */}
+              <BreathingGuide phase={currentPhase} progress={progress} isActive={isRunning} color={pattern.color} />
+              
+              {/* Main Glassmorphism Circle */}
+              <motion.div
+                className="relative rounded-full backdrop-blur-xl border shadow-2xl"
+                style={{
+                  width: isTablet ? '200px' : '240px',
+                  height: isTablet ? '200px' : '240px',
+                  background: isDarkMode 
+                    ? 'rgba(255, 255, 255, 0.05)' 
+                    : 'rgba(255, 255, 255, 0.25)',
+                  borderColor: isDarkMode 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(255, 255, 255, 0.3)',
+                  boxShadow: isDarkMode
+                    ? '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                    : '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                }}
+                animate={{
+                  scale: breathingScale,
+                  boxShadow: currentPhase ? 
+                    `0 0 ${40 * breathingScale}px ${pattern.color}40, 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)` : 
+                    isDarkMode 
+                      ? '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                      : '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+                }}
+                transition={{ 
+                  scale: { duration: currentPhase ? currentPhase.duration / 1000 : 2, ease: "easeInOut" },
+                  boxShadow: { duration: 1 }
+                }}
+              >
+                {/* Inner glassmorphism layers */}
+                <div 
+                  className={`absolute ${isTablet ? 'inset-4' : 'inset-4 md:inset-6'} rounded-full backdrop-blur-lg`}
+                  style={{
+                    background: isDarkMode ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.2)',
+                  }}
+                />
+                <div 
+                  className={`absolute ${isTablet ? 'inset-6' : 'inset-6 md:inset-10'} rounded-full backdrop-blur-md`}
+                  style={{
+                    background: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.3)',
+                  }}
+                />
+                
+                {/* Subtle gradient overlay */}
+                <div 
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)`
+                  }}
+                />
+                
+                {/* Content */}
+                <div className={`absolute inset-0 flex flex-col items-center justify-center text-center ${isTablet ? 'p-4' : 'p-4 md:p-8'}`}>
+                  <motion.div
+                    key={currentPhaseIndex}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={`${isTablet ? 'mb-2' : 'mb-2 md:mb-4'}`}
+                  >
+                    <div className={`${isTablet ? 'text-2xl mb-2' : 'text-2xl md:text-4xl mb-2 md:mb-3'} filter drop-shadow-md`}>{pattern.icon}</div>
+                    <h3 className={`${isTablet ? 'text-lg' : 'text-lg md:text-2xl'} font-medium ${isTablet ? 'mb-1' : 'mb-1 md:mb-2'} filter drop-shadow-sm ${
+                      isDarkMode ? 'text-white' : 'text-slate-700'
+                    }`}>
+                      {currentPhase ? currentPhase.name.charAt(0).toUpperCase() + currentPhase.name.slice(1) : 'Ready to begin?'}
+                    </h3>
+                    {currentPhase && (
+                      <div className={`${isTablet ? 'text-sm' : 'text-sm md:text-lg'} font-light filter drop-shadow-sm ${
+                        isDarkMode ? 'text-slate-200' : 'text-slate-500'
+                      }`}>
+                        {Math.ceil(remainingTime / 1000)}s
+                      </div>
+                    )}
+                  </motion.div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Phase Instruction */}
+            <AnimatePresence mode="wait">
+              {currentPhase && (
+                <motion.div
+                  key={currentPhaseIndex}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="text-center mb-8 md:mb-16 max-w-lg px-4"
+                >
+                  <p className={`text-lg md:text-xl leading-relaxed filter drop-shadow-sm ${
+                    isDarkMode ? 'text-slate-100' : 'text-slate-600'
+                  }`}>
+                    {currentPhase.instruction}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Control Panel - Desktop/Tablet - Interactive */}
+          <div 
+            className={`w-full ${isXL ? 'xl:w-96' : 'md:w-80'} backdrop-blur-xl p-4 md:p-8 flex flex-col justify-between border-l pointer-events-auto`}
+            style={{
+              background: isDarkMode 
+                ? 'rgba(0, 0, 0, 0.3)' 
+                : 'rgba(255, 255, 255, 0.25)',
+              borderColor: isDarkMode 
+                ? 'rgba(255, 255, 255, 0.1)' 
+                : 'rgba(255, 255, 255, 0.3)',
+            }}
+          >
+            
+            {/* Header with Dark Mode Toggle */}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className={`text-xl font-medium filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
+                Controls
+              </h2>
+              <motion.button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="p-3 rounded-full backdrop-blur-md transition-all border"
+                style={{
+                  background: isDarkMode 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(0, 0, 0, 0.1)',
+                  borderColor: isDarkMode 
+                    ? 'rgba(255, 255, 255, 0.2)' 
+                    : 'rgba(0, 0, 0, 0.2)',
                   color: isDarkMode ? 'white' : '#374151'
                 }}
                 whileHover={{ 
-                  scale: 1.02,
+                  scale: 1.05,
                   background: isDarkMode 
-                    ? 'rgba(71, 85, 105, 0.8)' 
-                    : 'rgba(226, 232, 240, 0.8)'
+                    ? 'rgba(255, 255, 255, 0.15)' 
+                    : 'rgba(0, 0, 0, 0.15)'
                 }}
-                whileTap={{ scale: 0.98 }}
-                disabled={currentPhaseIndex === -1}
+                whileTap={{ scale: 0.95 }}
               >
-                <RotateCcw size={18} className="mx-auto" />
-              </motion.button>
-              
-              <motion.button
-                onClick={() => setIsSettingsOpen(true)}
-                className="py-3 md:py-4 px-4 md:px-6 rounded-xl font-medium transition-all backdrop-blur-md"
-                style={{
-                  background: 'rgba(168, 85, 247, 0.8)',
-                  color: 'white'
-                }}
-                whileHover={{ 
-                  scale: 1.02,
-                  background: 'rgba(168, 85, 247, 0.9)'
-                }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Settings size={18} className="mx-auto" />
-              </motion.button>
-
-              <motion.button
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                className="py-3 md:py-4 px-4 md:px-6 rounded-xl font-medium transition-all backdrop-blur-md"
-                style={{
-                  background: soundEnabled 
-                    ? 'rgba(34, 197, 94, 0.8)' 
-                    : isDarkMode 
-                      ? 'rgba(71, 85, 105, 0.7)' 
-                      : 'rgba(148, 163, 184, 0.7)',
-                  color: 'white'
-                }}
-                whileHover={{ 
-                  scale: 1.02,
-                  background: soundEnabled 
-                    ? 'rgba(34, 197, 94, 0.9)' 
-                    : isDarkMode 
-                      ? 'rgba(71, 85, 105, 0.8)' 
-                      : 'rgba(148, 163, 184, 0.8)'
-                }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {soundEnabled ? <Volume2 size={18} className="mx-auto" /> : <VolumeX size={18} className="mx-auto" />}
+                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
               </motion.button>
             </div>
 
-            {/* Pattern Selection */}
-            <div className="grid grid-cols-2 gap-3">
-              {Object.entries(patterns).map(([key, pat]) => (
+            {/* Controls */}
+            <div className="space-y-6">
+              
+              {/* Primary Control */}
+              <motion.button
+                onClick={startExercise}
+                className={`w-full py-4 md:py-6 px-6 md:px-8 rounded-2xl font-medium text-lg shadow-xl transition-all ${
+                  isRunning 
+                    ? 'bg-amber-500 hover:bg-amber-400 text-white' 
+                    : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 text-white'
+                }`}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  {isRunning ? <Pause size={24} /> : <Play size={24} />}
+                  {currentPhaseIndex === -1 ? 'Begin Your Journey' : isRunning ? 'Pause' : 'Continue'}
+                </div>
+              </motion.button>
+
+              {/* Secondary Controls */}
+              <div className="grid grid-cols-3 gap-3 md:gap-4">
                 <motion.button
-                  key={key}
-                  onClick={() => setSelectedPattern(key)}
-                  className="p-3 md:p-4 rounded-xl text-left transition-all backdrop-blur-md border"
+                  onClick={resetExercise}
+                  className="py-3 md:py-4 px-4 md:px-6 rounded-xl font-medium transition-all backdrop-blur-md border"
                   style={{
-                    background: selectedPattern === key 
-                      ? isDarkMode 
-                        ? 'rgba(255, 255, 255, 0.15)' 
-                        : 'rgba(255, 255, 255, 0.6)'
-                      : isDarkMode 
-                        ? 'rgba(255, 255, 255, 0.05)' 
-                        : 'rgba(255, 255, 255, 0.2)',
-                    borderColor: selectedPattern === key 
-                      ? isDarkMode 
-                        ? 'rgba(255, 255, 255, 0.3)' 
-                        : 'rgba(59, 130, 246, 0.5)'
-                      : 'transparent',
-                    color: isDarkMode ? 'white' : selectedPattern === key ? '#1e293b' : '#64748b'
+                    background: isDarkMode 
+                      ? 'rgba(71, 85, 105, 0.7)' 
+                      : 'rgba(226, 232, 240, 0.7)',
+                    borderColor: isDarkMode 
+                      ? 'rgba(71, 85, 105, 0.8)' 
+                      : 'rgba(226, 232, 240, 0.8)',
+                    color: isDarkMode ? 'white' : '#374151'
                   }}
                   whileHover={{ 
                     scale: 1.02,
-                    background: selectedPattern === key 
-                      ? isDarkMode 
-                        ? 'rgba(255, 255, 255, 0.2)' 
-                        : 'rgba(255, 255, 255, 0.7)'
-                      : isDarkMode 
-                        ? 'rgba(255, 255, 255, 0.1)' 
-                        : 'rgba(255, 255, 255, 0.4)'
+                    background: isDarkMode 
+                      ? 'rgba(71, 85, 105, 0.8)' 
+                      : 'rgba(226, 232, 240, 0.8)'
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={currentPhaseIndex === -1}
+                >
+                  <RotateCcw size={18} className="mx-auto" />
+                </motion.button>
+                
+                <motion.button
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="py-3 md:py-4 px-4 md:px-6 rounded-xl font-medium transition-all backdrop-blur-md"
+                  style={{
+                    background: 'rgba(168, 85, 247, 0.8)',
+                    color: 'white'
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    background: 'rgba(168, 85, 247, 0.9)'
                   }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="text-xl md:text-2xl mb-1 md:mb-2">{pat.icon}</div>
-                  <div className="font-medium text-xs md:text-sm">{pat.name}</div>
+                  <Settings size={18} className="mx-auto" />
                 </motion.button>
-              ))}
-            </div>
-          </div>
 
-          {/* Stats */}
-          <div className="space-y-4 md:space-y-6 mt-6">
-            
-            {/* Cycle and Time Stats */}
-            <div className="grid grid-cols-2 gap-4">
+                <motion.button
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className="py-3 md:py-4 px-4 md:px-6 rounded-xl font-medium transition-all backdrop-blur-md"
+                  style={{
+                    background: soundEnabled 
+                      ? 'rgba(34, 197, 94, 0.8)' 
+                      : isDarkMode 
+                        ? 'rgba(71, 85, 105, 0.7)' 
+                        : 'rgba(148, 163, 184, 0.7)',
+                    color: 'white'
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    background: soundEnabled 
+                      ? 'rgba(34, 197, 94, 0.9)' 
+                      : isDarkMode 
+                        ? 'rgba(71, 85, 105, 0.8)' 
+                        : 'rgba(148, 163, 184, 0.8)'
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {soundEnabled ? <Volume2 size={18} className="mx-auto" /> : <VolumeX size={18} className="mx-auto" />}
+                </motion.button>
+              </div>
+
+              {/* Pattern Selection */}
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(patterns).map(([key, pat]) => (
+                  <motion.button
+                    key={key}
+                    onClick={() => setSelectedPattern(key)}
+                    className="p-3 md:p-4 rounded-xl text-left transition-all backdrop-blur-md border"
+                    style={{
+                      background: selectedPattern === key 
+                        ? isDarkMode 
+                          ? 'rgba(255, 255, 255, 0.15)' 
+                          : 'rgba(255, 255, 255, 0.6)'
+                        : isDarkMode 
+                          ? 'rgba(255, 255, 255, 0.05)' 
+                          : 'rgba(255, 255, 255, 0.2)',
+                      borderColor: selectedPattern === key 
+                        ? isDarkMode 
+                          ? 'rgba(255, 255, 255, 0.3)' 
+                          : 'rgba(59, 130, 246, 0.5)'
+                        : 'transparent',
+                      color: isDarkMode ? 'white' : selectedPattern === key ? '#1e293b' : '#64748b'
+                    }}
+                    whileHover={{ 
+                      scale: 1.02,
+                      background: selectedPattern === key 
+                        ? isDarkMode 
+                          ? 'rgba(255, 255, 255, 0.2)' 
+                          : 'rgba(255, 255, 255, 0.7)'
+                        : isDarkMode 
+                          ? 'rgba(255, 255, 255, 0.1)' 
+                          : 'rgba(255, 255, 255, 0.4)'
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="text-xl md:text-2xl mb-1 md:mb-2">{pat.icon}</div>
+                    <div className="font-medium text-xs md:text-sm">{pat.name}</div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="space-y-4 md:space-y-6 mt-6">
+              
+              {/* Cycle and Time Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div 
+                  className="rounded-xl p-3 md:p-4 text-center backdrop-blur-md border"
+                  style={{
+                    background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
+                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
+                  }}
+                >
+                  <div className={`font-bold text-lg md:text-xl filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{cycle}</div>
+                  <div className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>Cycles</div>
+                </div>
+                <div 
+                  className="rounded-xl p-3 md:p-4 text-center backdrop-blur-md border"
+                  style={{
+                    background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
+                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
+                  }}
+                >
+                  <div className={`font-bold text-lg md:text-xl filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{formatTime(sessionDuration)}</div>
+                  <div className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>Time</div>
+                </div>
+              </div>
+
+              {/* Progress */}
               <div 
-                className="rounded-xl p-3 md:p-4 text-center backdrop-blur-md border"
+                className="rounded-xl p-3 md:p-4 backdrop-blur-md border"
                 style={{
                   background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
                   borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
                 }}
               >
-                <div className={`font-bold text-lg md:text-xl filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{cycle}</div>
-                <div className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>Cycles</div>
-              </div>
-              <div 
-                className="rounded-xl p-3 md:p-4 text-center backdrop-blur-md border"
-                style={{
-                  background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
-                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
-                }}
-              >
-                <div className={`font-bold text-lg md:text-xl filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{formatTime(sessionDuration)}</div>
-                <div className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>Time</div>
-              </div>
-            </div>
-
-            {/* Progress */}
-            <div 
-              className="rounded-xl p-3 md:p-4 backdrop-blur-md border"
-              style={{
-                background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
-                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'
-              }}
-            >
-              <div className="flex justify-between items-center mb-2">
-                <span className={`text-sm ${isDarkMode ? 'text-slate-200' : 'text-slate-600'}`}>
-                  Serenity Progress
-                </span>
-                <span className={`font-medium filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
-                  {Math.min(100, Math.round((cycle / 10) * 100))}%
-                </span>
-              </div>
-              <div 
-                className="h-2 rounded-full overflow-hidden"
-                style={{
-                  background: isDarkMode ? 'rgba(71, 85, 105, 0.5)' : 'rgba(148, 163, 184, 0.5)'
-                }}
-              >
-                <motion.div
-                  className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full"
-                  animate={{ width: `${Math.min(100, (cycle / 10) * 100)}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                />
+                <div className="flex justify-between items-center mb-2">
+                  <span className={`text-sm ${isDarkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                    Serenity Progress
+                  </span>
+                  <span className={`font-medium filter drop-shadow-sm ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
+                    {Math.min(100, Math.round((cycle / 10) * 100))}%
+                  </span>
+                </div>
+                <div 
+                  className="h-2 rounded-full overflow-hidden"
+                  style={{
+                    background: isDarkMode ? 'rgba(71, 85, 105, 0.5)' : 'rgba(148, 163, 184, 0.5)'
+                  }}
+                >
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full"
+                    animate={{ width: `${Math.min(100, (cycle / 10) * 100)}%` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Settings Modal with Glassmorphism */}
+      {/* Affirmations - Universal */}
+      <AnimatePresence>
+        {currentAffirmation && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -30, scale: 0.9 }}
+            className={`fixed ${isMobile ? 'bottom-20 left-4 right-4' : 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'} backdrop-blur-xl rounded-2xl p-4 md:p-6 max-w-md mx-auto text-center shadow-xl border z-50 pointer-events-none`}
+            style={{
+              background: isDarkMode 
+                ? 'rgba(255, 255, 255, 0.08)' 
+                : 'rgba(255, 255, 255, 0.4)',
+              borderColor: isDarkMode 
+                ? 'rgba(255, 255, 255, 0.15)' 
+                : 'rgba(255, 255, 255, 0.5)',
+              boxShadow: isDarkMode
+                ? '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                : '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
+            }}
+          >
+            <p className={`text-base md:text-lg font-light leading-relaxed filter drop-shadow-sm ${
+              isDarkMode ? 'text-white' : 'text-slate-700'
+            }`}>
+              ✨ {currentAffirmation}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Settings Modal - Universal */}
       <AnimatePresence>
         {isSettingsOpen && (
           <motion.div
@@ -724,7 +1097,7 @@ function Breathing() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="backdrop-blur-xl p-6 md:p-8 rounded-3xl max-w-lg w-full shadow-2xl border"
+              className="backdrop-blur-xl p-6 md:p-8 rounded-3xl max-w-lg w-full shadow-2xl border max-h-[90vh] overflow-y-auto"
               style={{
                 background: isDarkMode 
                   ? 'rgba(30, 41, 59, 0.95)' 
@@ -758,7 +1131,7 @@ function Breathing() {
                   </label>
                   <div className="space-y-3">
                     {Object.entries(patterns).map(([key, pat]) => (
-                      <button
+                      <motion.button
                         key={key}
                         onClick={() => setSelectedPattern(key)}
                         className="w-full p-4 rounded-xl text-left transition-all backdrop-blur-md border"
@@ -768,19 +1141,14 @@ function Breathing() {
                               ? 'rgba(255, 255, 255, 0.15)' 
                               : 'rgba(59, 130, 246, 0.1)'
                             : isDarkMode 
-                              ? 'rgba(255, 255, 255, 0.05)' 
-                              : 'rgba(241, 245, 249, 0.5)',
-                          borderColor: selectedPattern === key 
-                            ? isDarkMode 
-                              ? 'rgba(255, 255, 255, 0.3)' 
-                              : 'rgba(59, 130, 246, 0.5)'
-                            : isDarkMode 
                               ? 'rgba(255, 255, 255, 0.1)' 
                               : 'rgba(226, 232, 240, 0.5)',
                           color: isDarkMode 
                             ? selectedPattern === key ? 'white' : '#cbd5e1'
                             : selectedPattern === key ? '#1e293b' : '#64748b'
                         }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{pat.icon}</span>
@@ -789,7 +1157,7 @@ function Breathing() {
                             <div className="text-sm opacity-75">{pat.description}</div>
                           </div>
                         </div>
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
@@ -812,10 +1180,10 @@ function Breathing() {
       <AnimatePresence>
         {completionCelebration && (
           <motion.div
-            initial={{ opacity: 0, x: 300 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 300 }}
-            className="fixed top-4 md:top-20 right-4 md:right-6 backdrop-blur-md rounded-2xl p-4 z-50 shadow-xl max-w-xs border"
+            initial={{ opacity: 0, x: isMobile ? 0 : 300, y: isMobile ? 50 : 0 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, x: isMobile ? 0 : 300, y: isMobile ? 50 : 0 }}
+            className={`fixed ${isMobile ? 'top-16 left-4 right-4' : 'top-4 md:top-20 right-4 md:right-6'} backdrop-blur-md rounded-2xl p-4 z-50 shadow-xl max-w-xs border ${isMobile ? 'mx-auto' : ''}`}
             style={{
               background: isDarkMode 
                 ? 'rgba(16, 185, 129, 0.2)' 
@@ -864,16 +1232,16 @@ function Breathing() {
                   repeat: Infinity, 
                   ease: "easeInOut" 
                 }}
-                className="text-4xl md:text-6xl mb-4"
+                className={`${isMobile ? 'text-4xl' : 'text-4xl md:text-6xl'} mb-4`}
               >
                 🧘‍♀️
               </motion.div>
-              <h2 className={`text-2xl md:text-4xl font-light mb-2 filter drop-shadow-md ${
+              <h2 className={`${isMobile ? 'text-2xl' : 'text-2xl md:text-4xl'} font-light mb-2 filter drop-shadow-md ${
                 isDarkMode ? 'text-white' : 'text-slate-800'
               }`}>
                 Perfect Serenity
               </h2>
-              <p className={`text-lg md:text-xl filter drop-shadow-sm ${
+              <p className={`${isMobile ? 'text-lg' : 'text-lg md:text-xl'} filter drop-shadow-sm ${
                 isDarkMode ? 'text-slate-200' : 'text-slate-600'
               }`}>
                 You've reached a beautiful state of calm
@@ -883,41 +1251,46 @@ function Breathing() {
         )}
       </AnimatePresence>
 
-      {/* Sound Toggle in Bottom Corner */}
-      <div className="fixed bottom-4 left-4 z-40">
-        <motion.button
-          onClick={() => setSoundEnabled(!soundEnabled)}
-          className="p-3 md:p-4 rounded-full backdrop-blur-md border transition-all shadow-lg"
-          style={{
-            background: soundEnabled 
-              ? 'rgba(59, 130, 246, 0.2)' 
-              : isDarkMode 
-                ? 'rgba(255, 255, 255, 0.1)' 
-                : 'rgba(255, 255, 255, 0.3)',
-            borderColor: soundEnabled 
-              ? 'rgba(59, 130, 246, 0.3)' 
-              : isDarkMode 
-                ? 'rgba(255, 255, 255, 0.2)' 
-                : 'rgba(255, 255, 255, 0.4)',
-            color: soundEnabled 
-              ? '#60a5fa' 
-              : isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#64748b'
-          }}
-          whileHover={{ 
-            scale: 1.05,
-            color: soundEnabled 
-              ? '#3b82f6' 
-              : isDarkMode ? 'rgba(255, 255, 255, 0.8)' : '#1e293b'
-          }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-        </motion.button>
-      </div>
+      {/* Touch-friendly Sound Toggle */}
+      {!isMobile && (
+        <div className="fixed bottom-4 left-4 z-40">
+          <motion.button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="p-3 md:p-4 rounded-full backdrop-blur-md border transition-all shadow-lg"
+            style={{
+              background: soundEnabled 
+                ? 'rgba(59, 130, 246, 0.2)' 
+                : isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.1)' 
+                  : 'rgba(255, 255, 255, 0.3)',
+              borderColor: soundEnabled 
+                ? 'rgba(59, 130, 246, 0.3)' 
+                : isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.2)' 
+                  : 'rgba(255, 255, 255, 0.4)',
+              color: soundEnabled 
+                ? '#60a5fa' 
+                : isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#64748b'
+            }}
+            whileHover={{ 
+              scale: 1.05,
+              color: soundEnabled 
+                ? '#3b82f6' 
+                : isDarkMode ? 'rgba(255, 255, 255, 0.8)' : '#1e293b'
+            }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </motion.button>
+        </div>
+      )}
 
-      {/* Info Toast */}
-      {soundEnabled && (
-        <div 
+      {/* Info Toast - Desktop only */}
+      {soundEnabled && !isMobile && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
           className="fixed bottom-20 left-4 backdrop-blur-md rounded-xl p-3 text-sm shadow-lg z-30 border"
           style={{
             background: isDarkMode 
@@ -930,10 +1303,91 @@ function Breathing() {
           }}
         >
           🔊 Sound enabled (visual feedback only)
-        </div>
+        </motion.div>
       )}
+
+      {/* Mobile-specific touch improvements */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .pointer-events-none {
+            /* Ensure touch events work on mobile for interactive elements */
+          }
+          
+          /* Improve touch targets */
+          button {
+            min-height: 44px;
+            min-width: 44px;
+          }
+          
+          /* Smooth scrolling for mobile */
+          html {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+          }
+          
+          /* Prevent zoom on input focus */
+          input, select, textarea {
+            font-size: 16px;
+          }
+          
+          /* Better tap highlights */
+          * {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+          }
+        }
+        
+        @media (max-width: 640px) {
+          /* Extra small mobile adjustments */
+          .text-3xl {
+            font-size: 1.875rem;
+          }
+        }
+        
+        /* Tablet-specific optimizations */
+        @media (min-width: 768px) and (max-width: 1024px) {
+          /* Ensure good touch targets on tablets */
+          button {
+            min-height: 48px;
+            min-width: 48px;
+          }
+        }
+        
+        /* High DPI display support */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+          .filter {
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+          }
+        }
+        
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+        
+        /* Dark mode system preference */
+        @media (prefers-color-scheme: dark) {
+          /* Additional dark mode styles if needed */
+        }
+        
+        /* Portrait orientation optimizations */
+        @media (orientation: portrait) and (max-width: 768px) {
+          /* Optimize for mobile portrait */
+        }
+        
+        /* Landscape orientation optimizations */
+        @media (orientation: landscape) and (max-height: 500px) {
+          /* Optimize for mobile landscape */
+          .min-h-screen {
+            min-height: 100vh;
+          }
+        }
+      `}</style>
     </motion.div>
   );
 }
 
-export default Breathing;
+export default Breathing; 
