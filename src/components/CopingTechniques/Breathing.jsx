@@ -211,9 +211,18 @@ function Breathing() {
   const sessionStartRef = useRef(null);
   
   // Bio-feedback refs
-  const pressTimes = useRef([]);          // raw key-down timestamps
-  const jitterRef  = useRef(0);           // latest jitter value
-  
+  const pressTimes  = useRef([]);   // stores BOTH key & mouse events
+  const lastMoveRef = useRef(0);    // 25 Hz throttle for mouse
+  const jitterRef   = useRef(0);
+
+  // push any event (key or mouse) into the same buffer
+  const pushEvent = (t) => {
+    pressTimes.current.push(t);
+    if (pressTimes.current.length > 30) pressTimes.current.shift();
+  };
+
+
+
   // ---------- AUDIO SYNTH ----------
   const audioCtx     = useRef(null);
   const oscL         = useRef(null), oscR   = useRef(null);
@@ -289,11 +298,38 @@ function Breathing() {
       setCurrentPhaseIndex(nextPhaseIndex);
     }, currentPhase.duration);
 
-    // Bio-feedback integration
+  // Bio-feedback integration
     const keyHandler = (e) => {
-      if (isRunning) pressTimes.current.push(performance.now());
+      if (isRunning) pushEvent(performance.now());
     };
     window.addEventListener('keydown', keyHandler);
+
+    // Capture click bursts (anxiety indicator)
+    const clickHandler = () => {
+      if (isRunning) pushEvent(performance.now());
+    };
+    window.addEventListener('click', clickHandler);
+
+    // Mouse movement tracker (25 Hz throttle)
+    const moveHandler = (e) => {
+      const now = performance.now();
+      if (isRunning && now - lastMoveRef.current > 40) { // 25 Hz = 40ms
+        pushEvent(now);
+        lastMoveRef.current = now;
+      }
+    };
+    window.addEventListener('mousemove', moveHandler);
+
+    // Scroll jank detector (stress indicator)
+    let lastScroll = 0;
+    const scrollHandler = () => {
+      const now = performance.now();
+      if (now - lastScroll > 100) { // max 10 Hz
+        if (isRunning) pushEvent(now);
+        lastScroll = now;
+      }
+    };
+    window.addEventListener('scroll', scrollHandler, { passive: true });
 
     // Jitter calculation and breathing adaptation
     const jitterInterval = setInterval(() => {
@@ -328,13 +364,13 @@ function Breathing() {
         }
       }));
     }, 5000);   // every 5 seconds
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('keydown', keyHandler);
-      clearInterval(jitterInterval);
-      audioCtx.current?.close();   // silence audio
-    };
+return () => {
+  clearTimeout(timer);
+  window.removeEventListener('keydown', keyHandler);
+  window.removeEventListener('click', clickHandler);
+  window.removeEventListener('scroll', scrollHandler);
+  clearInterval(jitterInterval);
+};
   }, [isRunning, currentPhaseIndex, pattern, selectedPattern]);
 
   // Progress and time tracking
@@ -397,7 +433,7 @@ function Breathing() {
     subOsc.current.frequency.setTargetAtTime(64, now, 0.1); // chest rumble
 
     // volumes (scale with circle size)
-    const vol     = 0.0003 * (breathingScale ** 2);
+    const vol     = 0.1 * (breathingScale ** 2);
     gainL.current.gain.setTargetAtTime(vol, now, 0.1);
     gainR.current.gain.setTargetAtTime(vol, now, 0.1);
     subGain.current.gain.setTargetAtTime(vol * 0.5, now, 0.1); // quieter sub
@@ -407,32 +443,66 @@ function Breathing() {
     panner.current.pan.setTargetAtTime(panValue, now, 0.1);
   }, [soundEnabled, currentPhase, breathingScale]);
 
-  const startExercise = useCallback(() => {
-    if (currentPhaseIndex === -1) {
-      setCurrentPhaseIndex(0);
-      setIsRunning(true);
-      sessionStartRef.current = Date.now();
-      setCurrentAffirmation("Welcome to your peaceful moment");
-      setTimeout(() => setCurrentAffirmation(''), 3000);
-    } else {
-      setIsRunning(!isRunning);
-      if (!isRunning && sessionStartRef.current) {
-        sessionStartRef.current = Date.now() - (sessionDuration * 1000);
-      }
+const startExercise = useCallback(() => {
+  // make sure the context is running
+  if (soundEnabled && audioCtx.current) {
+    if (audioCtx.current.state === 'suspended') audioCtx.current.resume();
+  } else if (soundEnabled && !audioCtx.current) {
+    // first time – build the whole chain
+    audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
+    gainL.current    = audioCtx.current.createGain();
+    gainR.current    = audioCtx.current.createGain();
+    subGain.current  = audioCtx.current.createGain();
+    panner.current   = audioCtx.current.createStereoPanner();
+    oscL.current     = audioCtx.current.createOscillator();
+    oscR.current     = audioCtx.current.createOscillator();
+    subOsc.current   = audioCtx.current.createOscillator();
+    oscL.current.connect(gainL.current).connect(panner.current);
+    oscR.current.connect(gainR.current).connect(panner.current);
+    subOsc.current.connect(subGain.current).connect(panner.current);
+    panner.current.connect(audioCtx.current.destination);
+    oscL.current.start();
+    oscR.current.start();
+    subOsc.current.start();
+  }
+  // your existing logic …
+  if (currentPhaseIndex === -1) {
+    setCurrentPhaseIndex(0);
+    setIsRunning(true);
+    sessionStartRef.current = Date.now();
+    setCurrentAffirmation('Welcome to your peaceful moment');
+    setTimeout(() => setCurrentAffirmation(''), 3000);
+  } else {
+    setIsRunning(v => !v);
+    if (!isRunning && sessionStartRef.current) {
+      sessionStartRef.current = Date.now() - sessionDuration * 1000;
     }
-  }, [currentPhaseIndex, isRunning, sessionDuration]);
+  }
+}, [currentPhaseIndex, isRunning, sessionDuration, soundEnabled]);
+
+
+
+
 
   const resetExercise = useCallback(() => {
-    setCurrentPhaseIndex(-1);
-    setIsRunning(false);
-    setCycle(0);
-    setSessionDuration(0);
-    setProgress(0);
-    setCurrentAffirmation('');
-    sessionStartRef.current = null;
-    // Reset patterns to initial state
-    setPatterns(initialPatterns);
-  }, []);
+  setCurrentPhaseIndex(-1);
+  setIsRunning(false);
+  setCycle(0);
+  setSessionDuration(0);
+  setProgress(0);
+  setCurrentAffirmation('');
+  sessionStartRef.current = null;
+  setPatterns(initialPatterns);
+  // silence & close the audio chain
+  if (audioCtx.current) {
+    audioCtx.current.close();
+    audioCtx.current = null;
+  }
+}, []);
+
+
+
+
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -1378,9 +1448,9 @@ function Breathing() {
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
-            className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none p-4"
+            className="fixed inset-0 flex items-start justify-center z-50 pointer-events-none p-4"
           >
-            <div className="text-center">
+            <div className="text-left ">
               <motion.div
                 animate={{ 
                   rotate: [0, 5, -5, 0],
