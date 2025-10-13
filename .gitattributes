@@ -1,0 +1,1 @@
+public/weights/*.safetensors filter=lfs diff=lfs merge=lfs -text
